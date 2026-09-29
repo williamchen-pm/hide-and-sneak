@@ -128,6 +128,15 @@ flowchart LR
 | V3-2 | More site adapters (Outlook web, Google Drive) | ⏸️ Deferred to v3 | ⬜ | Standards-based rules cover most sites first |
 | V3-4 | Site-blocklist policy generator | ⏸️ Deferred; likely drop | ⬜ | Q1 confirmed Claude uses the debugger API, so Chrome 155+ policy would be all-or-nothing. Drop if Q8 shows Chrome's per-extension Site access works. |
 
+### Proposed (post-MVP, raised 2026-09-29)
+
+| ID | Item | Decision | Build | Notes |
+|---|---|---|---|---|
+| P-1 | **Presenting mode** for screen sharing: mask typed values in sensitive fields instead of locking them (the user is the one typing), and redact sensitive text in tab titles via `document.title` | 💬 Proposed | ⬜ | Page text redaction already works during a screen share. First feature after launch. |
+| P-2 | **Screen-sharing checklist** in the README: share a single tab instead of the whole screen; use a separate "Presenting" Chrome profile or a Guest window; press Ctrl+Shift+B to hide the bookmarks bar | 💬 Proposed | ⬜ | No code. Extensions can't hide Chrome's URL bar, history suggestions, or bookmarks bar, so this is the honest workaround. |
+| P-3 | **Mature language pack** (optional, off by default) using an open word list with whole-word matching | 💬 Proposed | ⬜ | Custom "Protected words and phrases" rules already cover this. Check the word list's license before adopting it. Images are out of scope. |
+| P-4 | **"Why you can trust this extension"** README section: open source, no network access, no remote code, inert when Agent Mode is off | 💬 Proposed | ⬜ | Prompted by the Sept 2026 report that malicious extensions could hijack AI assistants, including Claude in Chrome. |
+
 ### Out of scope
 
 | Item | Reason |
@@ -215,3 +224,4 @@ flowchart LR
 | 2026-09-29 | Spike Tests 2, 3, 4 run with Claude in Chrome's tools: Q2, Q3, Q7 answered; added V1-28 (MAIN-world setter hook) |
 | 2026-09-29 | MVP scope confirmed: no whole-site blocking; Q8 / Test 1b deferred |
 | 2026-09-29 | Q6: inspected real Greenhouse and Lever forms; fixed combobox coverage and group markers; built `demo/job-application.html` (runs the real engine); added ATS fixture + demo e2e test |
+| 2026-09-29 | Added proposed backlog P-1 to P-4 (Presenting mode, screen-sharing checklist, mature language pack, README trust section) |
