@@ -200,3 +200,14 @@ test('placeholders never re-match (infinite-loop guard)', () => {
   const once = D.redactText('Password: Xy7!qP2m, PIN is 4821, card 4111 1111 1111 1111').text;
   assert.equal(D.redactText(once).text, once);
 });
+
+test('context matching: spaced-out digits (Gmail aria-label "1 3 0 1 7 3")', () => {
+  assert.equal((D.contextMatch('9 1 4 2 7 5', 'Code Requested') || {}).token, '[2FA CODE]');
+  assert.equal(D.contextMatch('9 1 4 2 7 5', 'September 2026'), null);
+});
+
+test('backup-code context must directly precede the list (no sentence break)', () => {
+  const m = (v, ctx) => (D.contextMatch(v, ctx) || {}).token || null;
+  assert.equal(m('1234567', 'New backup codes can be generated from your profile. Model RTX4090 ships in 2 days. September 2026'), null);
+  assert.equal(m('a1b2c3d4', 'Keep these backup codes somewhere safe but accessible. Backup Codes'), '[BACKUP CODE]');
+});

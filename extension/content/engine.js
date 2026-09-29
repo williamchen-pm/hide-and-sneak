@@ -94,8 +94,14 @@
   const rewrites = new WeakMap();
   function redactTextNode(node) {
     const t = node.nodeValue;
-    if (!t || t.length < 3) return;
+    if (!t) return;
     if ((rewrites.get(node) || 0) >= 5) return;
+    if (t.trim().length <= 2) {
+      // Tiny text: only interesting as one box of a code drawn one character per box.
+      const p0 = node.parentElement;
+      if (p0 && !SKIP_TAGS.has(p0.tagName) && !isOurs(p0) && /^[A-Za-z0-9]{1,2}$/.test(t.trim())) redactSplitGroup(node);
+      return;
+    }
     const parent = node.parentElement;
     if (!parent || SKIP_TAGS.has(parent.tagName) || isOurs(parent)) return;
     const r = D.redactText(t, settings.packs, extraRules);
@@ -116,6 +122,33 @@
     node.nodeValue = r.text;
     if (parent.tagName !== 'TITLE') highlightTokens(node, r.hits.map(h => h.token));
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
+  }
+
+  const splitGroups = new WeakSet();
+  function textNodesUnder(el) {
+    const out = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let n; while ((n = w.nextNode())) if (n.nodeValue.trim()) out.push(n);
+    return out;
+  }
+  function redactSplitGroup(node) {
+    let a = node.parentElement;
+    for (let i = 0; a && i < 5; i++, a = a.parentElement) {
+      const joined = (a.textContent || '').replace(/\s+/g, '');
+      if (joined.length > 12) return false;
+      if (!/^[A-Za-z0-9]{4,8}$/.test(joined) || !/\d/.test(joined)) continue;
+      if (splitGroups.has(a)) return true;
+      const nodes = textNodesUnder(a);
+      if (nodes.length < 4 || !nodes.every(n => n.nodeValue.trim().length <= 2)) continue;
+      const c = D.contextMatch(joined, precedingText(nodes[0], 400), settings.packs);
+      if (!c) return false;
+      splitGroups.add(a);
+      nodes[0].nodeValue = c.token;
+      for (const n of nodes.slice(1)) n.nodeValue = '';
+      highlightTokens(nodes[0], [c.token]);
+      totalProtected++; log({ effect: 'redact', ruleId: c.ruleId, pack: c.pack, token: c.token, where: 'text+split' });
+      return true;
+    }
+    return false;
   }
 
   // Collect up to `max` characters of visible-ish text that comes before `node` in document order.
@@ -161,6 +194,10 @@
       if (r.hits.length) {
         el.setAttribute(a, r.text);
         for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'attr:' + a }); }
+      } else if (v.length <= 24 && /\d/.test(v) && (a === 'aria-label' || a === 'title')) {
+        // A bare value in an accessibility label, labelled by text before the element.
+        const c = D.contextMatch(v, precedingText(el, 400), settings.packs);
+        if (c) { el.setAttribute(a, c.token); totalProtected++; log({ effect: 'redact', ruleId: c.ruleId, pack: c.pack, token: c.token, where: 'attr:' + a + '+context' }); }
       }
     }
   }
@@ -189,6 +226,7 @@
       else {
         redactAttrs(n);
         if (n.matches && n.matches(FIELD_SELECTOR)) considerField(n);
+        else if (n.matches && n.matches('button, [role=button]')) considerCopyButton(n);
         if (n.shadowRoot) { observeShadow(n.shadowRoot); processTree(n.shadowRoot); }
       }
       n = walker.nextNode();
@@ -248,7 +286,18 @@
 
   // Clears the live value AND the HTML attributes that hold the original (value/checked/selected),
   // so the original can't be read back from the DOM.
+  // Buttons that copy a secret straight from the site's own data (e.g. Gmail's "Copy code"),
+  // bypassing the page text. Blocked while Agent Mode is on.
+  const COPY_RE = /\bcopy\b[\s\S]{0,20}\b(?:code|otp|passcode|password|pin|key|token|backup codes?)\b/i;
+  function considerCopyButton(el) {
+    if (locked.has(el) || isOurs(el)) return;
+    const label = ((el.getAttribute('aria-label') || '') + ' ' + (el.textContent || '')).replace(/\s+/g, ' ').trim();
+    if (label.length > 60 || !COPY_RE.test(label)) return;
+    lockField(el, { pack: 'credentials', label: 'copy-secret button', reason: 'button text matches copy-secret', markerText: '🔒 Blocked', ariaText: 'Blocked by Hide & Sneak while Agent Mode is on.' });
+  }
+
   function clearField(el) {
+    if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button') return false;
     let had = false;
     if (el.type === 'checkbox' || el.type === 'radio') {
       had = el.checked || el.hasAttribute('checked');
@@ -266,12 +315,12 @@
   }
 
   function lockField(el, info) {
-    const kind = (el.type === 'checkbox' || el.type === 'radio' || el.tagName === 'SELECT') ? 'disabled' : 'readonly';
+    const kind = (el.type === 'checkbox' || el.type === 'radio' || el.tagName === 'SELECT' || el.tagName === 'BUTTON') ? 'disabled' : 'readonly';
     const state = { kind, info, prev: { readOnly: el.readOnly, disabled: el.disabled, tabIndex: el.getAttribute('tabindex'), ariaLabel: el.getAttribute('aria-label') } };
     if (clearField(el)) log({ effect: 'field-cleared', pack: info.pack, field: info.label });
     if (kind === 'readonly') el.readOnly = true; else el.disabled = true;
     el.setAttribute('tabindex', '-1');
-    el.setAttribute('aria-label', 'Locked by Hide & Sneak: the user will fill in this ' + info.label + ' field.');
+    el.setAttribute('aria-label', info.ariaText || ('Locked by Hide & Sneak: the user will fill in this ' + info.label + ' field.'));
     state.cover = coverTarget(el);
     // Radio/checkbox groups share one marker that covers all their options.
     const gk = groupKey(el);
@@ -352,7 +401,8 @@
         if (lab) { const lr = lab.getBoundingClientRect(); r = { left: Math.min(r.left, lr.left), top: Math.min(r.top, lr.top), right: Math.max(r.right, lr.right), bottom: Math.max(r.bottom, lr.bottom) }; }
         r = { left: r.left, top: r.top, width: Math.max(r.right - r.left, 110), height: Math.max(r.bottom - r.top, 22) };
       }
-      const txt = r.width >= 150 ? '🔒 You fill this one' : '🔒 You fill';
+      if (st.info.markerText && r.width < 92) r = { left: r.left, top: r.top, width: 92, height: Math.max(r.height, 22) };
+      const txt = st.info.markerText || (r.width >= 150 ? '🔒 You fill this one' : '🔒 You fill');
       if (st.marker.textContent !== txt) st.marker.textContent = txt;
       Object.assign(st.marker.style, {
         display: r.width || r.height ? 'flex' : 'none',

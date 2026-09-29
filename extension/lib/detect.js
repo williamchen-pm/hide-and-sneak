@@ -157,7 +157,7 @@
     // the context, so every code in the list gets matched, not just the first.
     { id: 'backup-codes', pack: 'credentials', token: '[BACKUP CODE]', list: true,
       value: /^(?=[^\s]*\d)[A-Za-z0-9]{4,}(?:[- ][A-Za-z0-9]{3,}){0,3}$/,
-      context: /\b(?:backup|recovery|scratch|emergency|one[- ]time)\s+(?:codes?|keys?)\b/i },
+      context: /\b(?:backup|recovery|scratch|emergency|one[- ]time)\s+(?:codes?|keys?)\b[^.!?]{0,40}$/i },
     { id: 'otp-context', pack: 'credentials', token: '[2FA CODE]',
       value: /^(?:\d{4,8}|\d{3}[ -]\d{3})$/,
       context: /\b(?:code|passcode|OTP|PIN|verification|verify|one[- ]time|log[- ]?in|sign[- ]?in|2FA|MFA|authenticat\w*)\b[^.]{0,120}$/i },
@@ -179,8 +179,10 @@
    */
   function contextMatch(value, precedingText, packs) {
     const p = Object.assign({}, DEFAULT_PACKS, packs || {});
-    const v = (value || '').trim();
+    let v = (value || '').trim();
     if (!v || v.length > 24) return null;
+    // Codes written with a space between every digit ("1 3 0 1 7 3", e.g. Gmail's aria-label).
+    if (/^\d(?:\s\d){3,7}$/.test(v)) v = v.replace(/\s/g, '');
     const raw = (precedingText || '').replace(/\s+/g, ' ');
     // Normally only the text after the last placeholder we inserted counts as context for this value.
     const ctxSingle = raw.split(/\[[A-Z0-9 #]+\]/).pop().trim().slice(-200);

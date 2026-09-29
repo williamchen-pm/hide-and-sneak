@@ -229,3 +229,4 @@ flowchart LR
 | 2026-09-29 | Added proposed backlog P-1 to P-4 (Presenting mode, screen-sharing checklist, mature language pack, README trust section) |
 | 2026-09-30 | Live Gmail fixes: split-label 2FA codes, backup-code lists. Coverage audit (`docs/AUDIT.md`); built engine gaps A1–A4 + Tier 1 patterns (0 → 16 of 28 audit samples); fixed a placeholder re-match loop |
 | 2026-09-30 | Added visual highlighting of hidden items (popup toggle); backlog P-5 sign-in hint |
+| 2026-09-30 | Gmail "Code Requested" card: spaced-digit labels, one-digit-per-box codes, and copy-secret buttons now covered; tightened backup-code context |

@@ -223,3 +223,11 @@ The toolbar icon is outside the page viewport that the agent's screenshots and c
 - **Regression checks:** `tests/e2e/email-split.html` confirms the split code is hidden, while a ZIP code and a copyright year right after it stay visible. Two new unit tests cover this.
 - **Found (2026-09-30):** an Activision "backup codes" email showed its ten codes in a table, fully visible. Backup codes mix letters and digits, and every earlier pattern expected digits only. After the first code was hidden, the lookback also stopped at that placeholder, so the rest of the list lost its "Backup Codes" heading as context.
 - **Fix:** a list-aware `backup-codes` context rule: values of 6 or more letters and digits (at least one digit), optionally dash-grouped, under "backup / recovery / scratch / emergency codes (or keys)." Earlier codes already replaced with `[BACKUP CODE]` stay part of the context, so every code in the list is matched. Regression fixture: a six-code table in `tests/e2e/email-split.html`. All hidden, while "profile", "RTX4090" in a sentence, and the username stay visible.
+- **Found (2026-09-30):** Gmail's own **"Code Requested"** card, shown above some verification emails, left the code visible while the email body was protected. I inspected its structure (digits masked). It draws each digit in its own `<span>` inside an `aria-hidden` block, the container's `aria-label` holds the code with spaces ("1 3 0 1 7 3"), and a **Copy code** button copies the code from Gmail's own data, not from the page.
+- **Fix, all generic:**
+  - `contextMatch` accepts space-separated digits.
+  - Short `aria-label`/`title` values get context-matched against the text before the element.
+  - One-character-per-box groups (4–8 characters total, every box ≤2 characters) are matched as one value; the first box shows the placeholder and the rest are emptied.
+  - Buttons like "Copy code / password / key / token" are disabled and covered with a 🔒 Blocked marker while Agent Mode is on.
+- **Regression checks:** the fixture reproduces the card: digits, label, and button are all covered. A calendar row of single digits and a "Copy link" button stay untouched. The same test caught the backup-code rule reaching past a sentence break ("New backup codes can be generated…"). Its context now has to directly precede the list.
+
