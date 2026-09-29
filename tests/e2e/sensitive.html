@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Test</title></head><body>
+<h1>Inbox</h1>
+<p id="p1">Your verification code is 482913.</p>
+<p id="p2">Card on file: 4111 1111 1111 1111. SSN: 123-45-6789.</p>
+<p id="p3">Routing number: 021000021, Account #: 000123456789</p>
+<p id="p4">Order #112-3456789-1234567 total $54.20</p>
+<button id="b1" aria-label="Pay with card 4111111111111111">Pay</button>
+<div id="later"></div>
+<h1>Application</h1>
+<form id="f" action="/echo" method="get">
+ <label for="fn">First name</label><input id="fn" name="fn" type="text" value="">
+ <label for="sal">Desired salary</label><input id="sal" name="sal" type="text" value="150000">
+ <label for="pw">Password</label><input id="pw" name="pw" type="password">
+ <fieldset><legend>Are you Hispanic or Latino?</legend>
+   <label><input type="radio" name="h" id="h1" value="y"> Yes</label>
+   <label><input type="radio" name="h" id="h2" value="n"> No</label></fieldset>
+ <label for="cc">Card number</label><input id="cc" name="cc" autocomplete="cc-number">
+ <label for="why">Why us?</label><textarea id="why"></textarea>
+<button id="sub" type="submit">Submit</button></form>
+<script>setTimeout(()=>{document.getElementById('later').textContent='Late email: your one-time code is 771234';},300)</script>
+</body></html>

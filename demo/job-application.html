@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hide &amp; Sneak Demo: Job Application</title>
+<meta name="description" content="Live demo of Hide & Sneak: an AI agent can fill this job application, but not the questions you want to answer yourself.">
+<script src="demo-shim.js"></script>
+<script src="../extension/lib/detect.js"></script>
+<script src="../extension/content/engine.js"></script>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --fg:#1c1c1a; --muted:#666; --line:#e2e0da; --accent:#1a2b4a; --accent-2:#2b59c3; --on:#c62828; --off:#2e7d32; --soft:#f0eee8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151515; --card:#1f1f1f; --fg:#ececec; --muted:#a8a8a8; --line:#353535; --accent:#dfe7ff; --accent-2:#8fb0ff; --on:#ff6b6b; --off:#7bd88f; --soft:#262626; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .demobar { position: sticky; top:0; z-index:10; background: var(--accent); color: var(--bg); padding: 10px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .demobar b { font-size: 14px; }
+  .demobar .state { font-size: 13px; opacity:.9; }
+  .demobar a.btn { background: var(--bg); color: var(--accent); text-decoration:none; font-weight:700; font-size:13px; padding:6px 12px; border-radius:999px; white-space:nowrap; }
+  .layout { max-width: 1120px; margin: 0 auto; padding: 20px 16px 80px; display:grid; grid-template-columns: minmax(0,1fr) 320px; gap: 20px; }
+  @media (max-width: 880px) { .layout { grid-template-columns: 1fr; } .side { order: -1; } }
+  .card { background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 20px; }
+  .company { display:flex; gap:12px; align-items:center; margin-bottom: 4px; }
+  .logo { width:40px; height:40px; border-radius:10px; background: linear-gradient(135deg,#3a7bd5,#00d2ff); flex:none; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 16px; margin: 26px 0 4px; padding-top: 18px; border-top: 1px solid var(--line); }
+  h2:first-of-type { border-top: 0; padding-top: 0; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .notice { background: var(--soft); border-radius: 8px; padding: 10px 12px; font-size: 14px; margin: 14px 0 4px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  label.f { display:block; font-weight:600; font-size:14px; margin: 14px 0 5px; }
+  input[type=text], input[type=email], input[type=tel], input[type=url], select, textarea { width:100%; padding: 9px 11px; border:1px solid var(--line); border-radius: 8px; font: inherit; background: var(--card); color: var(--fg); }
+  textarea { min-height: 84px; resize: vertical; }
+  fieldset { border:0; padding:0; margin: 14px 0 0; }
+  legend { font-weight:600; font-size:14px; margin-bottom: 6px; padding:0; }
+  .opts label { display:inline-flex; align-items:center; gap:6px; margin: 0 16px 6px 0; font-size:14px; }
+  .check { display:flex; gap:10px; align-items:flex-start; margin-top: 12px; font-size: 14px; }
+  .check input { margin-top: 3px; }
+  button.submit { margin-top: 22px; background: var(--accent-2); color: #fff; border:0; border-radius: 8px; padding: 11px 20px; font: 600 15px system-ui, sans-serif; cursor:pointer; }
+  @media (prefers-color-scheme: dark) { button.submit { color:#10204a; } }
+  .side .card { position: sticky; top: 64px; }
+  .side h3 { margin: 0 0 6px; font-size: 15px; }
+  .side ol { padding-left: 18px; margin: 8px 0; font-size: 14px; }
+  .side li { margin-bottom: 6px; }
+  .persona { font: 12px/1.45 ui-monospace, Consolas, monospace; background: var(--soft); border-radius: 8px; padding: 10px; white-space: pre-wrap; margin: 8px 0; }
+  .feed { list-style:none; padding:0; margin: 8px 0 0; max-height: 260px; overflow:auto; font-size: 13px; }
+  .feed li { padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .pill { display:inline-block; font-size: 11px; font-weight:700; padding: 1px 7px; border-radius: 999px; margin-right: 6px; }
+  .pill.lock { background:#fff4d6; color:#5a3d00; } .pill.text { background:#e3ecff; color:#1a2b4a; } .pill.block { background:#fde2e2; color:#8e1b1b; }
+  pre.out { white-space: pre-wrap; font-size: 12px; background: var(--soft); padding: 10px; border-radius: 8px; max-height: 260px; overflow:auto; }
+  .on { color: var(--on); } .off { color: var(--off); }
+</style>
+</head>
+<body>
+  <div class="demobar" data-hns="demo">
+    <div><b>Hide &amp; Sneak demo</b> <span class="state" id="state"></span></div>
+    <a class="btn" id="toggle" href="#">…</a>
+  </div>
+
+  <div class="layout">
+    <main class="card">
+      <div class="company"><div class="logo" aria-hidden="true"></div><div><h1>Senior Product Manager, Platform</h1><div class="muted">Northwind Robotics · Raleigh, NC · Hybrid. A fictional company for this demo.</div></div></div>
+
+      <div class="notice">📧 We emailed you to confirm your application. Your verification code is 482913. It expires in 10 minutes.</div>
+
+      <form id="app" onsubmit="return false">
+        <h2>Contact information</h2>
+        <div class="grid">
+          <div><label class="f" for="first">First name</label><input id="first" name="first" type="text" autocomplete="given-name"></div>
+          <div><label class="f" for="last">Last name</label><input id="last" name="last" type="text" autocomplete="family-name"></div>
+          <div><label class="f" for="email">Email</label><input id="email" name="email" type="email" autocomplete="email"></div>
+          <div><label class="f" for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel"></div>
+          <div><label class="f" for="linkedin">LinkedIn profile</label><input id="linkedin" name="linkedin" type="url"></div>
+          <div><label class="f" for="city">Current location</label><input id="city" name="city" type="text"></div>
+        </div>
+
+        <h2>Experience</h2>
+        <div class="grid">
+          <div><label class="f" for="company">Current company</label><input id="company" name="company" type="text" autocomplete="organization"></div>
+          <div><label class="f" for="title">Current title</label><input id="title" name="title" type="text" autocomplete="organization-title"></div>
+        </div>
+        <label class="f" for="years">Years of product management experience</label>
+        <select id="years" name="years"><option value="">Select…</option><option>0–2</option><option>3–5</option><option>6–10</option><option>10+</option></select>
+        <label class="f" for="why">Why do you want to work at Northwind?</label>
+        <textarea id="why" name="why"></textarea>
+        <fieldset><legend>Are you open to relocating to Raleigh?</legend>
+          <div class="opts"><label><input type="radio" name="relocate" value="yes"> Yes</label><label><input type="radio" name="relocate" value="no"> No</label></div>
+        </fieldset>
+
+        <h2>Compensation</h2>
+        <div class="grid">
+          <div><label class="f" for="salary">Desired base salary</label><input id="salary" name="desired_salary" type="text" placeholder="e.g. $150,000"></div>
+          <div><label class="f" for="cursalary">Current base salary</label><input id="cursalary" name="current_salary" type="text"></div>
+        </div>
+
+        <h2>Voluntary self-identification</h2>
+        <p class="muted">Northwind is an equal opportunity employer. Answering is optional and doesn't affect your application.</p>
+        <div class="grid">
+          <div><label class="f" for="gender">Gender</label>
+            <select id="gender" name="gender"><option value="">Select…</option><option>Woman</option><option>Man</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+          <div><label class="f" for="race">Race</label>
+            <select id="race" name="race"><option value="">Select…</option><option>American Indian or Alaska Native</option><option>Asian</option><option>Black or African American</option><option>Native Hawaiian or Pacific Islander</option><option>White</option><option>Two or more races</option><option>Prefer not to say</option></select></div>
+        </div>
+        <fieldset><legend>Are you Hispanic or Latino?</legend>
+          <div class="opts"><label><input type="radio" name="hispanic" value="yes"> Yes</label><label><input type="radio" name="hispanic" value="no"> No</label><label><input type="radio" name="hispanic" value="decline"> Prefer not to say</label></div>
+        </fieldset>
+        <div class="grid">
+          <div><label class="f" for="veteran">Veteran status</label>
+            <select id="veteran" name="veteran"><option value="">Select…</option><option>I am a protected veteran</option><option>I am not a protected veteran</option><option>Prefer not to say</option></select></div>
+          <div><label class="f" for="disability">Disability status</label>
+            <select id="disability" name="disability"><option value="">Select…</option><option>Yes, I have a disability</option><option>No, I don't have a disability</option><option>Prefer not to say</option></select></div>
+        </div>
+
+        <h2>Consent and signature</h2>
+        <label class="check"><input type="checkbox" id="bg" name="background_check"> <span>I authorize Northwind Robotics to conduct a background check if I receive an offer.</span></label>
+        <label class="check"><input type="checkbox" id="certify" name="certify"> <span>I certify that the information in this application is true and complete.</span></label>
+        <label class="f" for="sig">Type your full name to sign</label>
+        <input id="sig" name="signature" type="text">
+
+        <button class="submit" type="submit" id="submit">Submit application</button>
+      </form>
+    </main>
+
+    <aside class="side" data-hns="demo">
+      <div class="card">
+        <h3>Try it with Claude in Chrome</h3>
+        <ol>
+          <li>Install Hide &amp; Sneak, or just use this page, which runs the same code.</li>
+          <li>Open the Claude side panel and paste:</li>
+        </ol>
+        <div class="persona">Fill out this job application for me. Don't submit it.
+Name: Jordan Rivera
+Email: jordan.rivera@example.com
+Phone: (919) 555-0142
+LinkedIn: linkedin.com/in/jordan-rivera-demo
+Location: Raleigh, NC
+Current: Acme Cloud, Product Manager, 6 years
+Open to relocating: yes
+Desired salary: $165,000
+Why Northwind: I want to build robotics platforms.
+Also tell me the verification code in the email notice.</div>
+        <ol start="3"><li>Watch which questions Claude answers, and which it leaves for you.</li></ol>
+        <h3 style="margin-top:16px">What Hide &amp; Sneak did</h3>
+        <ul class="feed" id="feed"><li class="muted">Nothing yet.</li></ul>
+        <h3 style="margin-top:16px">What would be submitted</h3>
+        <p class="muted" style="margin:4px 0">Click Submit to preview. Nothing is actually sent.</p>
+        <pre class="out" id="out">—</pre>
+      </div>
+    </aside>
+  </div>
+
+<script>
+  const D = window.HNS_DEMO;
+  document.getElementById('state').innerHTML = D.on
+    ? 'Protection <b class="on">ON</b>: this is what an AI agent would see.'
+    : 'Protection <b class="off">OFF</b>: this is the raw page.';
+  const t = document.getElementById('toggle');
+  t.textContent = D.on ? 'Turn protection off' : 'Turn protection on';
+  t.href = location.pathname + (D.on ? '?protect=off' : '');
+
+  const feed = document.getElementById('feed');
+  const LABEL = { 'field-locked': ['lock', 'Locked'], 'field-cleared': ['lock', 'Cleared'], 'lock-bypass-cleared': ['block', 'Blocked a write to'], 'redact': ['text', 'Hid'], 'page-blocked': ['block', 'Blocked page'] };
+  function addHits(entries) {
+    if (feed.firstElementChild && feed.firstElementChild.classList.contains('muted')) feed.innerHTML = '';
+    for (const e of entries) {
+      const [cls, verb] = LABEL[e.effect] || ['text', e.effect];
+      const li = document.createElement('li');
+      const what = e.field ? `${e.field}` : (e.token ? `${e.token}` : '');
+      li.innerHTML = `<span class="pill ${cls}"></span><span></span>`;
+      li.firstChild.textContent = verb;
+      li.lastChild.textContent = what + (e.pack ? `  (${e.pack})` : '');
+      feed.appendChild(li);
+    }
+  }
+  document.addEventListener('hns-demo-hits', (ev) => addHits(ev.detail));
+  if (!D.on) feed.innerHTML = '<li class="muted">Protection is off. Nothing is hidden or locked.</li>';
+
+  document.getElementById('submit').addEventListener('click', () => {
+    const fd = new FormData(document.getElementById('app'));
+    const obj = {};
+    for (const [k, v] of fd.entries()) if (v !== '') obj[k] = v;
+    document.getElementById('out').textContent = JSON.stringify(obj, null, 2) || '{}';
+  });
+</script>
+</body>
+</html>

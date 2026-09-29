@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hide &amp; Sneak</title>
+<link rel="stylesheet" href="../ui.css">
+<style>
+  body { width: 300px; padding: 14px; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .big { font-size: 15px; font-weight: 700; }
+  .status { margin: 10px 0 12px; padding: 10px; border-radius: 8px; background: var(--soft); font-size: 13px; }
+  .status.on { background: var(--on-bg); color: var(--on-fg); }
+  .packs label { display:flex; justify-content:space-between; padding: 5px 0; font-size: 13px; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
+  .links { display:flex; justify-content:space-between; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div>
+      <div class="big">Agent Mode</div>
+      <div class="muted">Turn on before you hand a task to your AI agent.</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="agent"><span></span></label>
+  </div>
+  <div class="status" id="status">Off. The extension isn't touching any page.</div>
+
+  <div class="muted" style="margin-bottom:4px">Protection packs</div>
+  <div class="packs" id="packs"></div>
+
+  <hr>
+  <label class="row" style="font-size:13px"><span>Skip protection on <b id="host">this site</b></span><input type="checkbox" id="siteoff"></label>
+  <hr>
+  <div class="links"><a href="#" id="opts">Rules &amp; activity log</a></div>
+<script src="../lib/settings.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

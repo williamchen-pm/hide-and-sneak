@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ATS markup fixtures</title>
+<!-- Simplified from real public application pages (Greenhouse job-boards, Lever apply), 2026-09-29.
+     Structure only; company names and IDs removed. Loads the real engine through the demo shim. -->
+<script src="../../demo/demo-shim.js"></script>
+<script src="../../extension/lib/detect.js"></script>
+<script src="../../extension/content/engine.js"></script>
+<style> .select__control{display:flex;width:600px;height:34px;border:1px solid #999;align-items:center;cursor:pointer} .select__input{width:3px;border:0;padding:0} ul{list-style:none;padding:0} </style>
+</head><body>
+<h2>Greenhouse (React-Select comboboxes)</h2>
+<div class="select__container"><label id="first-label" for="first_name">First Name</label>
+  <input id="first_name" type="text" autocomplete="given-name" aria-label="First Name"></div>
+<div class="select__container"><label id="gender-label" for="gender" class="label select__label">Gender</label>
+  <div class="select-shell"><div><div class="select__control" id="gender-control"><div class="select__value-container"><div class="select__placeholder">Select...</div>
+  <div class="select__input-container"><input class="select__input" autocomplete="off" id="gender" role="combobox" aria-expanded="false" aria-labelledby="gender-label" type="text"></div></div></div></div></div></div>
+<div class="select__container"><label id="reloc-label" for="question_1">Are you open to relocation for this role? *</label>
+  <div class="select-shell"><div><div class="select__control" id="reloc-control"><div class="select__value-container"><div class="select__placeholder">Select...</div>
+  <div class="select__input-container"><input class="select__input" autocomplete="off" id="question_1" role="combobox" aria-expanded="false" aria-labelledby="reloc-label" type="text"></div></div></div></div></div></div>
+<h2>Lever (demographic survey radios)</h2>
+<ul>
+ <li class="application-question"><div class="application-label">What best describes your gender?</div>
+  <div class="application-field"><ul>
+   <li><label><input type="radio" name="surveysResponses[x][responses][field1]" value="Woman">Woman</label></li>
+   <li><label><input type="radio" name="surveysResponses[x][responses][field1]" value="Man">Man</label></li>
+   <li><label><input type="radio" name="surveysResponses[x][responses][field1]" value="Prefer not to disclose">Prefer not to disclose</label></li>
+  </ul></div></li>
+ <li class="application-question"><div class="application-label">Are you interested in working out of our New York office?</div>
+  <div class="application-field"><ul>
+   <li><label><input type="radio" name="cards[y][field1]" value="Yes">Yes</label></li>
+   <li><label><input type="radio" name="cards[y][field1]" value="No">No</label></li>
+  </ul></div></li>
+</ul>
+</body></html>

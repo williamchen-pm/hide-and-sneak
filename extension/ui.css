@@ -1,0 +1,17 @@
+:root { --bg:#ffffff; --fg:#1d1d1b; --muted:#666; --line:#e2e2e2; --soft:#f3f3f1; --accent:#2b59c3; --accent-fg:#ffffff; --on-bg:#fdecea; --on-fg:#8e1b1b; }
+@media (prefers-color-scheme: dark) { :root { --bg:#1e1e1e; --fg:#eee; --muted:#aaa; --line:#3a3a3a; --soft:#2a2a2a; --accent:#8fb0ff; --accent-fg:#10204a; --on-bg:#4a1f1f; --on-fg:#ffd7d7; } }
+* { box-sizing: border-box; }
+body { margin:0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+a { color: var(--accent); }
+.muted { color: var(--muted); font-size: 12px; }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span { position:absolute; inset:0; background:#bbb; border-radius:999px; cursor:pointer; }
+.ready .switch span, .ready .switch span::before { transition:.15s; }
+.switch span::before { content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; }
+.switch input:checked + span { background:#c62828; }
+.switch input:checked + span::before { transform: translateX(18px); }
+.switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-fg); font-weight: 600; cursor: pointer; }
+button.secondary { background: transparent; color: var(--accent); }
+textarea, input[type=text] { width:100%; font: 13px/1.4 ui-monospace, monospace; padding: 8px; border:1px solid var(--line); border-radius:6px; background: var(--bg); color: var(--fg); }

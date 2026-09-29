@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hide &amp; Sneak: Rules & Activity</title>
+<link rel="stylesheet" href="../ui.css">
+<style>
+  main { max-width: 820px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  section { border:1px solid var(--line); border-radius:10px; padding:16px; margin-top: 12px; }
+  .actions { display:flex; gap:8px; margin-top:10px; align-items:center; }
+  table { width:100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align:left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { cursor: pointer; user-select: none; }
+  .tablewrap { max-height: 420px; overflow: auto; margin-top: 10px; }
+  .saved { color: #2e7d32; font-size: 12px; }
+  ol { padding-left: 20px; margin: 6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hide &amp; Sneak</h1>
+  <p class="muted">Let browser AI agents see only what they need. Everything here stays on this computer.</p>
+
+  <section id="welcome">
+    <h2 style="margin-top:0">How to use it</h2>
+    <ol>
+      <li>Click the Hide &amp; Sneak icon in the Chrome toolbar. (If you don't see it, click the puzzle-piece icon and pin Hide &amp; Sneak.)</li>
+      <li>Turn on <b>Agent Mode</b> before you hand a task to your AI agent.</li>
+      <li>Sensitive text shows as placeholders like <code>[CARD #]</code>. Sensitive form fields show <b>🔒 You fill this one</b>. Your agent sees exactly what you see.</li>
+      <li>When the agent is done, turn Agent Mode off. Locked fields unlock right away so you can fill them in. Reload a page to see hidden text again.</li>
+    </ol>
+  </section>
+
+  <h2>Protected pages</h2>
+  <section>
+    <p class="muted">One URL pattern per line. Use <code>*</code> as a wildcard. While Agent Mode is on, matching pages are replaced with a "This page is protected" notice.<br>Examples: <code>https://www.amazon.com/cpe/yourpayments/*</code> &nbsp; <code>*://*.mybank.com/statements*</code></p>
+    <textarea id="pageRules" rows="5" spellcheck="false"></textarea>
+    <div class="actions"><button id="savePages">Save</button><span class="saved" id="pagesSaved"></span></div>
+  </section>
+
+  <h2>Protected words and phrases</h2>
+  <section>
+    <p class="muted">One phrase per line. Matching text is replaced with <code>[PROTECTED]</code> on every page while Agent Mode is on. Example: a project name, a medication, a family member's name.</p>
+    <textarea id="keywords" rows="4" spellcheck="false"></textarea>
+    <div class="actions"><button id="saveKeywords">Save</button><span class="saved" id="keywordsSaved"></span></div>
+  </section>
+
+  <h2>Activity log</h2>
+  <section>
+    <p class="muted">What Hide &amp; Sneak protected, where, and when. The original values are never recorded.</p>
+    <div class="actions"><button class="secondary" id="refresh">Refresh</button><button class="secondary" id="export">Export JSON</button><button class="secondary" id="clear">Clear log</button><span class="muted" id="logCount"></span></div>
+    <div class="tablewrap"><table><thead><tr><th data-k="ts">Time</th><th data-k="effect">What happened</th><th data-k="detail">Detail</th><th data-k="url">Page</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+</main>
+<script src="../lib/settings.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
