@@ -5,7 +5,10 @@
  */
 (function () {
   const on = new URLSearchParams(location.search).get('protect') !== 'off';
-  window.HNS_DEMO = { on, events: [] };
+  // The installed extension injects at document_start, before this script, and claims the page.
+  // When that happens the demo's own engine steps aside, so the demo toggle has no effect.
+  const extension = document.documentElement.hasAttribute('data-hns-engine');
+  window.HNS_DEMO = { on, extension, events: [] };
   const settings = {
     agentMode: on, sessionId: 'demo',
     packs: { identity: true, payments: true, credentials: true, contact: false, job: true, last4: new URLSearchParams(location.search).get('last4') === '1' },

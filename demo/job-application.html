@@ -174,7 +174,12 @@ Also tell me the verification code in the email notice.</div>
     }
   }
   document.addEventListener('hns-demo-hits', (ev) => addHits(ev.detail));
-  if (!D.on) feed.innerHTML = '<li class="muted">Protection is off. Nothing is hidden or locked.</li>';
+  if (D.extension) {
+    document.getElementById('state').innerHTML =
+      'Your <b class="on">Hide &amp; Sneak extension</b> is protecting this page (Agent Mode is on). Turn Agent Mode off in the extension to use this demo\'s toggle.';
+    t.style.display = 'none';
+    feed.innerHTML = '<li class="muted">Your installed extension is handling this page, so its activity shows in the extension\'s Activity log instead of here.</li>';
+  } else if (!D.on) feed.innerHTML = '<li class="muted">Protection is off. Nothing is hidden or locked.</li>';
 
   document.getElementById('submit').addEventListener('click', () => {
     const fd = new FormData(document.getElementById('app'));
