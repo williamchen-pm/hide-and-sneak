@@ -4,6 +4,8 @@
 
 Hide & Sneak is a free, open-source Chrome extension for people who hand everyday tasks to a browser AI agent such as Claude in Chrome: triaging email, filling out job applications, shopping, paying bills. Turn on **Agent Mode** before you delegate. While it's on, sensitive text on the page is replaced with placeholders like `[2FA CODE]`, and form fields you should answer yourself are locked. When Agent Mode is off, the extension does nothing.
 
+**[Download the beta (v0.9.0)](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak-0.9.0.zip)** · [Install steps](#install) · Chrome Web Store version is in review
+
 > [!WARNING]
 > **This is a beta (v0.9.0).** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
 >
