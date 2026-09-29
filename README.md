@@ -63,15 +63,15 @@ Hide & Sneak **may miss sensitive info on some sites**, especially unusual page 
 
 ## Install
 
-**Chrome Web Store:** coming soon.
+**Chrome Web Store:** in review. Until it's approved, install the beta directly (about a minute):
 
-**From source (developer mode):**
-
-1. [Download this repository](https://github.com/williamchen-pm/hide-and-sneak/archive/refs/heads/main.zip) and unzip it.
+1. Download **[hide-and-sneak-0.9.0.zip](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak-0.9.0.zip)** from the [latest release](https://github.com/williamchen-pm/hide-and-sneak/releases/latest) and unzip it.
 2. In Chrome, type `chrome://extensions` in the address bar and press **Enter**.
 3. Turn on **Developer mode** (top-right).
-4. Click **Load unpacked** (top-left) and select the **`extension`** folder inside the download.
+4. Click **Load unpacked** (top-left) and select the unzipped folder (the one that contains `manifest.json`).
 5. Click the **puzzle-piece icon** next to the address bar and **pin** Hide & Sneak.
+
+Chrome may show a "developer mode extensions" notice on startup; that's normal for extensions installed this way. Once the store version is live, remove this copy and install from the store to get automatic updates.
 
 ## How to use it
 
