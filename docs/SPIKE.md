@@ -240,4 +240,8 @@ The toolbar icon is outside the page viewport that the agent's screenshots and c
   - **Routing context:** now list-aware and accepts "routing", "wire", "ABA", or "transit" within the sentence. The ABA checksum keeps it from hiding random 9-digit numbers.
   - **New opt-in Last 4 pack** (off by default): "Checking - 1234", "ending in 4242", "•••• 4242", "****1234".
 - **Result:** account and routing numbers are hidden in all four layouts, while phone, rewards points, dates, and the balance stay visible. **Needs the user's recheck on the real page.**
+- **Recheck (2026-09-30):** both routing numbers were now hidden. The account number was still visible **after clicking "Show full account number"**; at load it's masked (`xxxxxxxx5761`), so there's nothing to hide until the click.
+  - **Reproduced blind** with six common reveal styles (`tests/e2e/bank-reveal.html`). The one that leaked: an icon button (e.g., "Copy") sitting before the number became its "row label" and blocked the fallback.
+  - **Fix:** buttons, links, and icons are never treated as labels. When the nearest label doesn't match, the nearby-text check still runs, unless that label clearly names something harmless (Phone, Date, Points, Balance…).
+  - All six variants are now hidden. Needs the user's recheck on the real page.
 

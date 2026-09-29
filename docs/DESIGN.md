@@ -231,3 +231,4 @@ flowchart LR
 | 2026-09-30 | Added visual highlighting of hidden items (popup toggle); backlog P-5 sign-in hint |
 | 2026-09-30 | Gmail "Code Requested" card: spaced-digit labels, one-digit-per-box codes, and copy-secret buttons now covered; tightened backup-code context |
 | 2026-09-30 | Bank pages: row-label association, looser account/routing context, opt-in Last 4 pack (popup toggle) |
+| 2026-09-30 | Click-to-reveal account numbers: skip buttons/icons as labels; keep nearby-text fallback unless the label names a harmless field |

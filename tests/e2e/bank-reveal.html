@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Bank reveal (fixture)</title>
+<!-- Ways a bank reveals a masked account number on click ("xxxxxxxx5761" -> full number).
+     Built without looking at any real bank page (2026-09-30). Numbers are fake. -->
+<script src="../../demo/demo-shim.js"></script><script src="../../extension/lib/detect.js"></script><script src="../../extension/content/engine.js"></script>
+<style>.row{display:flex;gap:40px;margin:8px 0}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}</style></head>
+<body>
+<!-- R1: same text node changes -->
+<div class="row"><div>Account number</div><div><span id="r1">xxxxxxxx5761</span> <a href="#" id="b1">Show full account number</a></div></div>
+<!-- R2: hidden full-number span toggled visible -->
+<div class="row"><div>Account number</div><div><span id="r2m">xxxxxxxx5762</span><span id="r2" style="display:none">004620365762</span> <a href="#" id="b2">Show full account number</a></div></div>
+<!-- R3: icon button with a short label BEFORE the number -->
+<div class="row"><div>Account number</div><div><button id="c3"><span class="sr">Copy</span>⧉</button><span id="r3">xxxxxxxx5763</span> <a href="#" id="b3">Show full account number</a></div></div>
+<!-- R4: read-only input shows the number -->
+<div class="row"><label for="r4">Account number</label><div><input id="r4" readonly value="xxxxxxxx5764"> <a href="#" id="b4">Show full account number</a></div></div>
+<!-- R5: container re-rendered with innerHTML -->
+<div class="row"><div>Account number</div><div id="r5c"><span>xxxxxxxx5765</span> <a href="#" id="b5">Show full account number</a></div></div>
+<!-- R6: masked and full text in one node with a tooltip label before it -->
+<div class="row"><div>Account number <span title="Your account number">ⓘ</span></div><div><span id="r6">xxxxxxxx5766</span> <a href="#" id="b6">Show</a></div></div>
+<script>
+  const $ = id => document.getElementById(id);
+  $('b1').onclick = e => { e.preventDefault(); $('r1').firstChild.nodeValue = '004620365761'; };
+  $('b2').onclick = e => { e.preventDefault(); $('r2m').style.display = 'none'; $('r2').style.display = ''; };
+  $('b3').onclick = e => { e.preventDefault(); $('r3').textContent = '004620365763'; };
+  $('b4').onclick = e => { e.preventDefault(); $('r4').value = '004620365764'; };
+  $('b5').onclick = e => { e.preventDefault(); $('r5c').innerHTML = '<span id="r5">004620365765</span> <a href="#">Hide full account number</a>'; };
+  $('b6').onclick = e => { e.preventDefault(); $('r6').textContent = '0046 2036 5766'; };
+</script>
+</body></html>

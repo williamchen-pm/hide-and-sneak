@@ -114,7 +114,8 @@
         // field label.
         const lab = rowLabel(node);
         let c = lab ? D.contextMatch(trimmed, lab, settings.packs) : null;
-        if (!c && (!lab || lab.length > 30)) c = D.contextMatch(trimmed, precedingText(node, 400), settings.packs);
+        // Fall back to nearby text unless the value's own label clearly names something harmless.
+        if (!c && !(lab && HARMLESS_LABEL_RE.test(lab))) c = D.contextMatch(trimmed, precedingText(node, 400), settings.packs);
         if (c) {
           node.nodeValue = t.replace(trimmed, c.token);
           if (node.parentElement && node.parentElement.tagName !== 'TITLE') highlightTokens(node, [c.token]);
@@ -133,6 +134,10 @@
   // isn't the text right before the value in page order (e.g. a column of labels next to a column
   // of values). Checks previous siblings of the value's ancestors, and matches rows by position
   // when two sibling columns have the same number of children.
+  // Labels whose values are fine to show (a phone number under an "Account" row stays visible).
+  const HARMLESS_LABEL_RE = /\b(?:phone|mobile|cell|fax|tel(?:ephone)?|zip|postal|date|since|opened|points|miles|rewards|order|tracking|confirmation|invoice|ticket|reference|quantity|qty|price|amount|total|balance|year|version|model|sku)\b/i;
+  // Controls and icons next to a value aren't its label.
+  function notLabelEl(el) { return !el || isOurs(el) || (el.matches && el.matches('button, [role=button], a, svg, img, input, select, textarea')); }
   function labelLike(t) { return !!t && t.length <= 80 && !/\d/.test(t) && !/\[[A-Z0-9 #]+\]/.test(t); }
   function rowLabel(node) {
     let a = node.parentElement;
@@ -146,8 +151,9 @@
         const lab = textOf(col.previousElementSibling.children[idx]);
         if (labelLike(lab)) return lab;
       }
-      const prev = a.previousElementSibling;
-      if (prev && !isOurs(prev)) { const pt = textOf(prev); if (labelLike(pt)) return pt; }
+      let prev = a.previousElementSibling;
+      while (prev && notLabelEl(prev)) prev = prev.previousElementSibling;
+      if (prev) { const pt = textOf(prev); if (labelLike(pt)) return pt; }
     }
     return '';
   }
