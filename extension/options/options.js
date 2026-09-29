@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const lines = (t) => t.split('\n').map(s => s.trim()).filter(Boolean);
 const EFFECT = {
-  'redact': 'Text hidden', 'field-locked': 'Field locked', 'field-cleared': 'Field cleared on lock',
+  'redact': 'Text hidden', 'field-locked': 'Field protected', 'field-cleared': 'Field cleared on lock',
   'lock-bypass-cleared': 'Blocked a write to a locked field', 'page-blocked': 'Page blocked', 'miss': 'Rule missed its target',
   'session-start': 'Agent Mode on', 'session-end': 'Agent Mode off',
 };

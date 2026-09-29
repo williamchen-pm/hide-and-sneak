@@ -160,7 +160,7 @@ Also tell me the verification code in the email notice.</div>
   t.href = location.pathname + (D.on ? '?protect=off' : '');
 
   const feed = document.getElementById('feed');
-  const LABEL = { 'field-locked': ['lock', 'Locked'], 'field-cleared': ['lock', 'Cleared'], 'lock-bypass-cleared': ['block', 'Blocked a write to'], 'redact': ['text', 'Hid'], 'page-blocked': ['block', 'Blocked page'] };
+  const LABEL = { 'field-locked': ['lock', 'Protected'], 'field-cleared': ['lock', 'Cleared'], 'lock-bypass-cleared': ['block', 'Blocked a write to'], 'redact': ['text', 'Hid'], 'page-blocked': ['block', 'Blocked page'] };
   function addHits(entries) {
     if (feed.firstElementChild && feed.firstElementChild.classList.contains('muted')) feed.innerHTML = '';
     for (const e of entries) {

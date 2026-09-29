@@ -2,7 +2,7 @@
  * Injected only while Agent Mode is on. It:
  *   1. hides the page until the first protection pass is done (no flash of originals)
  *   2. replaces sensitive text and attributes with placeholders (never CSS-hides them)
- *   3. locks sensitive form fields ("You fill this one") and clears anything written into them
+ *   3. locks sensitive form fields ("🔒 Protected by Hide & Sneak") and clears anything written into them
  *   4. replaces protected pages with a placeholder
  *   5. reports what it did to the audit log (never the original values)
  * When Agent Mode is turned off, it unlocks fields in place (no reload, no lost work).
@@ -327,7 +327,7 @@
     if (locked.has(el) || isOurs(el)) return;
     const label = ((el.getAttribute('aria-label') || '') + ' ' + (el.textContent || '')).replace(/\s+/g, ' ').trim();
     if (label.length > 60 || !COPY_RE.test(label)) return;
-    lockField(el, { pack: 'credentials', label: 'copy-secret button', reason: 'button text matches copy-secret', markerText: '🔒 Blocked', ariaText: 'Blocked by Hide & Sneak while Agent Mode is on.' });
+    lockField(el, { pack: 'credentials', label: 'copy-secret button', reason: 'button text matches copy-secret', isButton: true, ariaText: 'Protected by Hide & Sneak while Agent Mode is on.' });
   }
 
   function clearField(el) {
@@ -354,7 +354,7 @@
     if (clearField(el)) log({ effect: 'field-cleared', pack: info.pack, field: info.label });
     if (kind === 'readonly') el.readOnly = true; else el.disabled = true;
     el.setAttribute('tabindex', '-1');
-    el.setAttribute('aria-label', info.ariaText || ('Locked by Hide & Sneak: the user will fill in this ' + info.label + ' field.'));
+    el.setAttribute('aria-label', info.ariaText || ('Protected by Hide & Sneak (' + info.label + '). Ask the user to fill this in.'));
     state.cover = coverTarget(el);
     // Radio/checkbox groups share one marker that covers all their options.
     const gk = groupKey(el);
@@ -406,7 +406,9 @@
     if (layer && layer.isConnected) return layer;
     layer = document.createElement('div');
     layer.setAttribute(HNS_ATTR, 'layer');
-    layer.style.cssText = 'position:absolute;top:0;left:0;width:0;height:0;z-index:2147483646;';
+    // Fixed to the viewport and positioned from getBoundingClientRect, so markers stay on fields
+    // inside fixed pop-ups (dialogs, modals) as well as in normally scrolling pages.
+    layer.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;z-index:2147483646;';
     document.documentElement.appendChild(layer);
     return layer;
   }
@@ -414,8 +416,8 @@
     const m = document.createElement('div');
     m.setAttribute(HNS_ATTR, 'lock');
     m.setAttribute('role', 'note');
-    m.textContent = (el.type === 'radio' || el.type === 'checkbox') ? '🔒 You fill' : '🔒 You fill this one';
-    m.title = 'Hide & Sneak locked this ' + info.label + ' field while Agent Mode is on.';
+    m.textContent = MARKER_TEXT.short;
+    m.title = 'Protected by Hide & Sneak (' + info.label + ') while Agent Mode is on. Turn Agent Mode off to fill it in.';
     m.style.cssText = 'position:absolute;display:flex;align-items:center;gap:6px;box-sizing:border-box;padding:0 10px;' +
       'font:600 12px/1.2 system-ui,sans-serif;color:#5a3d00;background:repeating-linear-gradient(135deg,#fff4d6,#fff4d6 8px,#ffeab0 8px,#ffeab0 16px);' +
       'border:1.5px solid #c98a00;border-radius:6px;cursor:not-allowed;overflow:hidden;white-space:nowrap;';
@@ -424,6 +426,21 @@
     ensureLayer().appendChild(m);
     return m;
   }
+  // Marker wording by available width, so text is never cut off.
+  const MARKER_TEXT = { long: '🔒 Protected by Hide & Sneak', short: '🔒 Protected', icon: '🔒' };
+  function markerText(width) { return width >= 210 ? MARKER_TEXT.long : width >= 96 ? MARKER_TEXT.short : MARKER_TEXT.icon; }
+
+  // Scrolling/clipping ancestors (e.g. a modal's scrolling body), cached per locked field, so a
+  // marker is trimmed to what's actually visible instead of floating over other content.
+  function clipAncestors(el) {
+    const out = [];
+    for (let a = el.parentElement; a && a !== document.body && a !== document.documentElement; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflow + cs.overflowX + cs.overflowY)) out.push(a);
+    }
+    return out;
+  }
+
   function positionMarkers() {
     for (const [el, st] of locked) {
       if (!el.isConnected) { st.marker.remove(); locked.delete(el); continue; }
@@ -435,13 +452,24 @@
         if (lab) { const lr = lab.getBoundingClientRect(); r = { left: Math.min(r.left, lr.left), top: Math.min(r.top, lr.top), right: Math.max(r.right, lr.right), bottom: Math.max(r.bottom, lr.bottom) }; }
         r = { left: r.left, top: r.top, width: Math.max(r.right - r.left, 110), height: Math.max(r.bottom - r.top, 22) };
       }
-      if (st.info.markerText && r.width < 92) r = { left: r.left, top: r.top, width: 92, height: Math.max(r.height, 22) };
-      const txt = st.info.markerText || (r.width >= 150 ? '🔒 You fill this one' : '🔒 You fill');
+      if (st.info.isButton && r.width < 96) r = { left: r.left, top: r.top, width: 96, height: Math.max(r.height, 22) };
+      // Trim to the visible part of any scrolling/clipping ancestor and the viewport.
+      if (!st.clips) st.clips = clipAncestors(st.cover || el);
+      let L = r.left, T = r.top, R = r.left + r.width, B = r.top + r.height;
+      for (const c of st.clips) {
+        if (!c.isConnected) continue;
+        const cr = c.getBoundingClientRect();
+        L = Math.max(L, cr.left); T = Math.max(T, cr.top); R = Math.min(R, cr.right); B = Math.min(B, cr.bottom);
+      }
+      L = Math.max(L, 0); T = Math.max(T, 0); R = Math.min(R, innerWidth); B = Math.min(B, innerHeight);
+      const w = R - L, h = B - T, visible = w > 2 && h > 2;
+      const txt = markerText(w);
       if (st.marker.textContent !== txt) st.marker.textContent = txt;
       Object.assign(st.marker.style, {
-        display: r.width || r.height ? 'flex' : 'none',
-        left: (r.left + scrollX) + 'px', top: (r.top + scrollY) + 'px',
-        width: r.width + 'px', height: r.height + 'px',
+        display: visible ? 'flex' : 'none',
+        justifyContent: txt === MARKER_TEXT.icon ? 'center' : 'flex-start',
+        padding: txt === MARKER_TEXT.icon ? '0' : '0 10px',
+        left: L + 'px', top: T + 'px', width: w + 'px', height: h + 'px',
       });
     }
   }
@@ -574,7 +602,7 @@
     addEventListener('formdata', (e) => { if (!active) return; for (const [el] of locked) if (el.name && e.formData.has(el.name)) e.formData.delete(el.name); }, true);
     addEventListener('scroll', queuePosition, true);
     addEventListener('resize', queuePosition);
-    setInterval(queuePosition, 1000);   // catch layout shifts
+    setInterval(queuePosition, 300);    // catch layout shifts and pop-up animations (cheap: a few rects)
   }
 
   chrome.storage.onChanged.addListener((changes) => {

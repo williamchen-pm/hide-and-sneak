@@ -91,7 +91,7 @@ Organized by the tasks people actually delegate. "Read" means what the agent see
 
 | # | Task | What the user wants | Protection | Type |
 |---|---|---|---|---|
-| UC1 | **Forms and job applications** | Agent fills work history, contact info, and free-text answers. The user answers demographic questions (race, gender, veteran, disability), salary expectations and history, SSN, date of birth, background-check consent, and legal attestations. | **Field rules:** matching fields are locked and marked "You fill this one." The agent fills everything else. | Write |
+| UC1 | **Forms and job applications** | Agent fills work history, contact info, and free-text answers. The user answers demographic questions (race, gender, veteran, disability), salary expectations and history, SSN, date of birth, background-check consent, and legal attestations. | **Field rules:** matching fields are locked and marked "🔒 Protected by Hide & Sneak" (or "🔒 Protected" / 🔒 on narrow fields). The agent fills everything else. | Write |
 | UC2 | **Shopping and checkout** | Agent finds products, compares prices, and fills shipping. It never sees or enters card numbers, CVV, or bank details, and never sees the saved-payments page. | **Field rules** (payment preset) + **page rules** (saved-payment pages) + **pattern redaction** (card numbers shown as text) | Read + Write |
 | UC3 | **Account portals** (bank, brokerage, benefits, HR, health, insurance) | Agent can navigate, find documents, or check status, but specific pages (statements, pay stubs, claims, medical records) are off-limits. | **Page rules** by URL pattern | Read |
 | UC4 | **Anything containing personal identifiers** (email, docs, CRM, dashboards, confirmations) | Agent can read and work with the page, but SSNs, card, account, and routing numbers, phone, address, and 2FA codes appear as placeholders. | **Pattern redaction** on any page, grouped into protection packs | Read |
@@ -132,7 +132,7 @@ All rules are stored in `chrome.storage.local`, can be exported and imported as 
 | Rule type | Target | Effect | Phase |
 |---|---|---|---|
 | **Pattern** | Text matching a regex (with checksums where they exist: Luhn for cards, ABA for routing numbers) | Replace with a typed token | v1 |
-| **Field** | Form inputs matched by `autocomplete` attribute, input `type`, name/id, or label text | Lock the field, clear any existing value, and overlay "You fill this one" | v1 |
+| **Field** | Form inputs matched by `autocomplete` attribute, input `type`, name/id, or label text | Lock the field, clear any existing value, and overlay "🔒 Protected by Hide & Sneak" | v1 |
 | **Page** | URL pattern | Replace the page body with a `Protected page` placeholder. Rechecked on in-app navigation (`pushState`, `replaceState`, `popstate`, `hashchange`). | v1 |
 | **Sender / Label** (Gmail adapter) | Gmail thread sender or label | Replace the whole thread with `[Protected thread]` | v1 |
 | **Keyword** | Case-insensitive phrase | Redact the match, or protect the whole containing block | v1 |
@@ -162,7 +162,7 @@ Packs group rules by use case so users turn on protections, not regexes. Each ca
 - **Popup:** Agent Mode setting, a toolbar badge, per-pack toggles, and a per-site off switch.
 - **Turning on** registers the content scripts for future page loads and injects them into already-open tabs without reloading. **Turning off** unregisters them and unlocks fields in place without reloading, so work the agent already filled in isn't lost. Hidden text stays hidden until the user reloads the page, because originals are never stored.
 - **Options page:** packs, custom rules, JSON import and export, and the audit log table.
-- **On-page markers:** locked fields show "You fill this one." Protected pages and sections show placeholders. A slim banner confirms Agent Mode is on.
+- **On-page markers:** locked fields show "🔒 Protected by Hide & Sneak" (or "🔒 Protected" / 🔒 on narrow fields). Protected pages and sections show placeholders. A slim banner confirms Agent Mode is on.
 
 ### 6.5 Onboarding and self-test
 

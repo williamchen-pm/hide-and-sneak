@@ -85,7 +85,7 @@ flowchart LR
 | V1-1 | Engine: `<all_urls>` content script, Agent Mode gate, pre-render hide, MutationObserver | All | ✅ Agreed | 🟩 Built | §6.1 | Does nothing when off; no content flash when on; meets the 16 ms budget |
 | V1-2 | Text + attribute redaction | UC2, UC4 | ✅ Agreed | 🟩 Built | §6.1 | No originals in screenshot, page-text, a11y, or JS reads |
 | V1-3 | Pattern rules with checksums (Luhn, ABA) | UC2, UC4 | ✅ Agreed | ✔️ Verified | §6.2 | Unit tests pass, including false-positive cases |
-| V1-4 | Field rules: detect, lock, clear, "You fill this one" overlay | UC1, UC2 | ✅ Agreed | 🟩 Built | §6.2 | Agent completes the demo form with every locked field empty |
+| V1-4 | Field rules: detect, lock, clear, "🔒 Protected by Hide & Sneak" overlay | UC1, UC2 | ✅ Agreed | 🟩 Built | §6.2 | Agent completes the demo form with every locked field empty |
 | V1-5 | Page rules + in-app navigation hooks | UC2, UC3 | ✅ Agreed | 🟩 Built | §6.2 | Protected page never renders, including after in-app navigation |
 | V1-6 | Keyword rules | UC4 | ✅ Agreed | 🟨 In progress | §6.2 | Match and block modes tested |
 | V1-7 | Gmail adapter: sender + label thread rules | UC5 | ✅ Agreed | ⬜ Not started | §6.2 | Protected threads hidden in the list and message views |
@@ -178,6 +178,8 @@ flowchart LR
 | 2026-09-29 | Turning on injects into open tabs without reloading; turning off unlocks fields in place without reloading | Reloading on turn-off would wipe the form the agent just filled, which is the whole job-application use case. Hidden text stays hidden until a manual reload, since originals are never stored. |
 | 2026-09-29 | Locked fields: clear value **and** the `value`/`checked`/`selected` attributes; clear on input events, a 400 ms sweep, and before submit; strip from submitted form data | e2e test found the original still readable in the HTML attribute, and a script write readable until the next sweep |
 | 2026-09-29 | Radio/checkbox question text: climb ancestors only while they contain no other fields, then read the label just before | First version read the whole form and locked an unrelated "authorized to work" question because the form mentioned salary |
+| 2026-09-30 | Lock marker wording: "🔒 Protected by Hide & Sneak" / "🔒 Protected" / 🔒 by available width; agent-facing label "Protected by Hide & Sneak. Ask the user to fill this in." | Reads as a feature, not an error, and never truncates. The agent label nudges Claude to hand the field back instead of working around it. |
+| 2026-09-30 | Marker layer is viewport-fixed and trimmed to scrolling ancestors | Markers drifted off fields inside fixed pop-ups (store wallet "Edit payment method") |
 | 2026-09-30 | Highlight hidden items with the CSS Custom Highlight API (dark bar, amber text), with a popup toggle on by default | Makes hidden items easy to spot without adding or changing page elements, which could break React-style sites; Chrome paints it natively, so no lag. Shows the type of item only, since originals are never stored. |
 | 2026-09-29 | Lock markers cover the whole control for comboboxes and tiny inputs; radio/checkbox groups share one marker | Real Greenhouse EEO questions are React-Select widgets with a 3 px input; the per-option markers overlapped on grouped radios |
 | 2026-09-29 | Demo pages run the real engine through a small `chrome.*` shim (`demo/demo-shim.js`) instead of a separate demo implementation | The demo can't drift from what the extension actually does |
@@ -232,3 +234,4 @@ flowchart LR
 | 2026-09-30 | Gmail "Code Requested" card: spaced-digit labels, one-digit-per-box codes, and copy-secret buttons now covered; tightened backup-code context |
 | 2026-09-30 | Bank pages: row-label association, looser account/routing context, opt-in Last 4 pack (popup toggle) |
 | 2026-09-30 | Click-to-reveal account numbers: skip buttons/icons as labels; keep nearby-text fallback unless the label names a harmless field |
+| 2026-09-30 | New marker wording (Protected), width tiers, fixed-layer positioning for pop-ups; `tests/e2e/modal.html` |

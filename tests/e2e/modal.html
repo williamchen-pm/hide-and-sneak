@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Payment pop-up (fixture)</title>
+<!-- A fixed "Edit payment method" pop-up over a scrolling page, like a store wallet (2026-09-30).
+     Checks marker alignment inside fixed pop-ups and marker wording by width. -->
+<script src="../../demo/demo-shim.js"></script><script src="../../extension/lib/detect.js"></script><script src="../../extension/content/engine.js"></script>
+<style>
+  body{margin:0;font:15px system-ui} .page{height:2400px;padding:20px;background:linear-gradient(#eee,#ccc)}
+  .dlg{position:fixed;left:50%;top:80px;transform:translateX(-50%);width:360px;background:#222;color:#eee;border-radius:12px;padding:20px;box-shadow:0 10px 40px #0008}
+  .body{max-height:260px;overflow:auto;padding-right:6px} label{display:block;margin:12px 0 4px;font-weight:600}
+  input,select{box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid #666;background:#333;color:#eee}
+  .spacer{height:300px}
+</style></head>
+<body><div class="page"><h1>Your wallet</h1><p>Scroll the page behind the pop-up.</p></div>
+<div class="dlg" role="dialog" aria-label="Edit payment method"><h3>Edit payment method</h3><div class="body" id="body">
+  <label for="name">Name on card</label><input id="name" autocomplete="cc-name" style="width:100%">
+  <label>Expiration date</label>
+  <select id="expm" autocomplete="cc-exp-month" aria-label="Expiration month" style="width:54px"><option>01</option><option>02</option></select>
+  <select id="expy" autocomplete="cc-exp-year" aria-label="Expiration year" style="width:80px"><option>2027</option><option>2028</option></select>
+  <label for="cc">Card number</label><input id="cc" autocomplete="cc-number" style="width:100%">
+  <div class="spacer"></div>
+  <label for="cvv">Security code</label><input id="cvv" autocomplete="cc-csc" style="width:120px">
+</div></div></body></html>
