@@ -66,7 +66,7 @@
       // A bare value on its own (e.g. "826774" under "Or enter this code:"): check preceding text.
       const trimmed = t.trim();
       if (trimmed.length >= 4 && trimmed.length <= 24 && /\d/.test(trimmed)) {
-        const c = D.contextMatch(trimmed, precedingText(node, 200), settings.packs);
+        const c = D.contextMatch(trimmed, precedingText(node, 400), settings.packs);
         if (c) {
           node.nodeValue = t.replace(trimmed, c.token);
           totalProtected++; log({ effect: 'redact', ruleId: c.ruleId, pack: c.pack, token: c.token, where: 'text+context' });
@@ -86,14 +86,15 @@
     });
     w.currentNode = node;
     let out = '';
-    for (let i = 0; i < 40 && out.length < max; i++) {
+    for (let i = 0; i < 80 && out.length < max; i++) {
       const prev = w.previousNode();
       if (!prev) break;
       const v = prev.nodeValue.trim();
       if (!v) continue;
       // Stop at the previous standalone value or at a placeholder we already inserted, so one
       // label ("Enter this code:") only ever vouches for the value right after it.
-      if (/^[\d\s()+.-]{4,}$/.test(v) || /\[[A-Z0-9 #]+\]/.test(v)) break;
+      // (Placeholders are kept in the text; contextMatch decides how to treat them.)
+      if (/^[\d\s()+.-]{4,}$/.test(v)) break;
       out = v + ' ' + out;
     }
     return out.slice(-max);

@@ -127,6 +127,12 @@
   // single-text-node patterns above never see both. These rules look at a standalone value
   // plus the text that precedes it on the page.
   const CONTEXT_RULES = [
+    // Backup / recovery codes: usually a list (table or bullets) of mixed letters and digits under
+    // a "Backup codes" heading. `list: true` lets earlier codes we've already hidden stay part of
+    // the context, so every code in the list gets matched, not just the first.
+    { id: 'backup-codes', pack: 'credentials', token: '[BACKUP CODE]', list: true,
+      value: /^(?=[^\s]*\d)[A-Za-z0-9]{4,}(?:[- ][A-Za-z0-9]{3,}){0,3}$/,
+      context: /\b(?:backup|recovery|scratch|emergency|one[- ]time)\s+(?:codes?|keys?)\b/i },
     { id: 'otp-context', pack: 'credentials', token: '[2FA CODE]',
       value: /^(?:\d{4,8}|\d{3}[ -]\d{3})$/,
       context: /\b(?:code|passcode|OTP|PIN|verification|verify|one[- ]time|log[- ]?in|sign[- ]?in|2FA|MFA|authenticat\w*)\b[^.]{0,120}$/i },
@@ -150,10 +156,13 @@
     const p = Object.assign({}, DEFAULT_PACKS, packs || {});
     const v = (value || '').trim();
     if (!v || v.length > 24) return null;
-    // Only the text after the last placeholder we inserted counts as context for this value.
-    const ctx = (precedingText || '').split(/\[[A-Z0-9 #]+\]/).pop().replace(/\s+/g, ' ').trim().slice(-200);
+    const raw = (precedingText || '').replace(/\s+/g, ' ');
+    // Normally only the text after the last placeholder we inserted counts as context for this value.
+    const ctxSingle = raw.split(/\[[A-Z0-9 #]+\]/).pop().trim().slice(-200);
     for (const r of CONTEXT_RULES) {
-      if (!p[r.pack] || !r.value.test(v)) continue;
+      if (!p[r.pack] || v.length < 6 && r.list || !r.value.test(v)) continue;
+      // List rules look past earlier items of the same list (already replaced with this rule's token).
+      const ctx = r.list ? raw.split(r.token).join(' ').split(/\[[A-Z0-9 #]+\]/).pop().replace(/\s+/g, ' ').trim().slice(-200) : ctxSingle;
       if (r.check && !r.check(v.replace(/\D/g, ''))) continue;
       if (r.context.test(ctx)) return { token: r.token, ruleId: r.id, pack: r.pack };
     }

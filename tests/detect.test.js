@@ -142,3 +142,18 @@ test('context matching: value and label in separate elements (Gmail/Nextdoor, 20
 test('context matching ignores our own placeholders', () => {
   assert.equal(D.contextMatch('94102', 'Your login code is [2FA CODE] 420 Taylor Street, San Francisco, CA'), null);
 });
+
+test('context matching: backup/recovery code lists (Activision-style table, 2026-09-30)', () => {
+  const m = (v, ctx) => (D.contextMatch(v, ctx) || {}).token || null;
+  const head = 'Keep these backup codes somewhere safe but accessible. Backup Codes';
+  assert.equal(m('a1b2c3d4', head), '[BACKUP CODE]');
+  // Later codes in the list: earlier ones are already replaced by the placeholder.
+  assert.equal(m('x9y8z7w6', head + ' [BACKUP CODE] [BACKUP CODE] [BACKUP CODE]'), '[BACKUP CODE]');
+  assert.equal(m('4f2a9-c81e0', 'Your recovery codes:'), '[BACKUP CODE]');
+  assert.equal(m('12345678', 'Recovery codes'), '[BACKUP CODE]');
+  // Should NOT match
+  assert.equal(m('profile', head), null, 'plain word, no digit');
+  assert.equal(m('Lycanstyle#4438577', 'Hello'), null);
+  assert.equal(m('a1b2c3d4', 'Your order'), null, 'no backup-code context');
+  assert.equal(m('RTX4090', 'We shipped your GPU'), null);
+});
