@@ -230,4 +230,14 @@ The toolbar icon is outside the page viewport that the agent's screenshots and c
   - One-character-per-box groups (4–8 characters total, every box ≤2 characters) are matched as one value; the first box shows the placeholder and the rest are emptied.
   - Buttons like "Copy code / password / key / token" are disabled and covered with a 🔒 Blocked marker while Agent Mode is on.
 - **Regression checks:** the fixture reproduces the card: digits, label, and button are all covered. A calendar row of single digits and a "Copy link" button stay untouched. The same test caught the backup-code rule reaching past a sentence break ("New backup codes can be generated…"). Its context now has to directly precede the list.
+- **Found (2026-09-30, user's own Bank of America page, not inspected by Claude at the user's request):**
+  - The full account number and the wire routing number stayed visible. The first routing number was hidden.
+  - "Personal Checking - ####" showed the last 4 digits, as designed.
+  - The balance showed, since the planned Balances pack isn't built.
+- **Fix (built blind against common bank layouts in `tests/e2e/bank.html`):**
+  - **Row-label association** (`rowLabel`): a value's own label is found from a label cell in the same row, a `<dt>`/`<th>`, or the matching row of a side-by-side label column. It's checked first, so "Phone" next to a number keeps it visible even under an "Account" row.
+  - **Looser account context:** 8+ digit numbers with "account" nearby are caught even with hidden helper text or a Show/Hide link in between.
+  - **Routing context:** now list-aware and accepts "routing", "wire", "ABA", or "transit" within the sentence. The ABA checksum keeps it from hiding random 9-digit numbers.
+  - **New opt-in Last 4 pack** (off by default): "Checking - 1234", "ending in 4242", "•••• 4242", "****1234".
+- **Result:** account and routing numbers are hidden in all four layouts, while phone, rewards points, dates, and the balance stay visible. **Needs the user's recheck on the real page.**
 

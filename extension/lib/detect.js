@@ -79,6 +79,14 @@
       // opaque path segment after /magic, /reset, /verify, /confirm, /login, /signin.
       re: /(\bhttps?:\/\/[^\s"'<>]*?(?:[?&#](?:token|reset_token|login_token|access_token|auth_token|magic|otp|code|key|signature|sig)=[A-Za-z0-9._~%-]{8,}|\/(?:magic|reset|verify|confirm|login|signin|sign-in|auth)[\w-]*\/[A-Za-z0-9_-]{16,})[^\s"'<>]*)/dgi },
 
+    // Last 4 digits of cards/accounts (opt-in: agents often need these to pick the right one)
+    { id: 'last4-ending', pack: 'last4', token: '[LAST 4]', group: 1,
+      re: /\b(?:ending(?:\s+in)?|ends\s+in|last\s+(?:4|four)(?:\s+digits)?)[\s:#]{0,4}(\d{4})(?!\d)/dgi },
+    { id: 'last4-masked', pack: 'last4', token: '[LAST 4]', group: 1,
+      re: /(?:[•*●·xX]{2,}[\s-]?|\.{3}\s?)(\d{4})(?!\d)/dg },
+    { id: 'last4-label', pack: 'last4', token: '[LAST 4]', group: 1,
+      re: /\b(?:checking|savings|account|acct|card|visa|mastercard|amex|american\s+express|discover|debit|credit)\b[^\n\d]{0,16}?[-–—]\s?(\d{4})(?!\d)/dgi },
+
     // Contact (off by default)
     { id: 'phone-us', pack: 'contact', token: '[PHONE]', group: 1,
       re: /(?<![\d-])((?:\+?1[ .-]?)?(?:\(\d{3}\)\s?|\d{3}[ .-])\d{3}[ .-]\d{4})(?![\d-])/dg },
@@ -94,7 +102,7 @@
 
   const PLACEHOLDER_RE = /^\s*(?:\[[A-Z0-9 #]+\]\s*)+$/;
 
-  const DEFAULT_PACKS = { identity: true, payments: true, credentials: true, contact: false, job: true };
+  const DEFAULT_PACKS = { identity: true, payments: true, credentials: true, contact: false, job: true, last4: false };
 
   function enabledRules(packs, extraRules) {
     const p = Object.assign({}, DEFAULT_PACKS, packs || {});
@@ -164,12 +172,18 @@
     { id: 'ssn-context', pack: 'identity', token: '[SSN]',
       value: /^(?!000|666|9\d\d)\d{3}-?\d{2}-?\d{4}$/,
       context: /(?:\bSSN\b|social\s+security(?:\s+(?:number|no\.?|#))?|\bTIN\b)[\s:#.\-]{0,20}$/i },
-    { id: 'routing-context', pack: 'payments', token: '[ROUTING #]', check: (v) => abaValid(v),
+    { id: 'routing-context', pack: 'payments', token: '[ROUTING #]', check: (v) => abaValid(v), list: true,
+      // Banks list several (e.g. "paper & electronic", then "wires"); the ABA checksum keeps this safe.
       value: /^\d{9}$/,
-      context: /(?:routing(?:\s+(?:number|no\.?|#))?|\bABA\b|\bRTN\b)[\s:#.\-]{0,20}$/i },
+      context: /(?:routing|\bABA\b|\bRTN\b|\bwires?\b|transit)[^.!?]{0,120}$/i },
     { id: 'account-context', pack: 'payments', token: '[ACCOUNT #]',
       value: /^(?:\d[ -]?){5,16}\d$/,
       context: /(?:\baccount|\bacct)\.?(?:\s+(?:number|no\.?|#))?[\s:#.\-]{0,20}$/i },
+    { id: 'account-context-near', pack: 'payments', token: '[ACCOUNT #]', list: true,
+      // Longer numbers (8+ digits) with "account" nearby, allowing helper text in between
+      // (e.g. a hidden "Your full account number is" or a "Show/Hide" link).
+      value: /^(?:\d[ -]?){7,16}\d$/,
+      context: /(?:\baccount|\bacct)\b[^.!?]{0,80}$/i },
   ];
 
   /**

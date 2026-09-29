@@ -109,7 +109,12 @@
       // A bare value on its own (e.g. "826774" under "Or enter this code:"): check preceding text.
       const trimmed = t.trim();
       if (trimmed.length >= 4 && trimmed.length <= 24 && /\d/.test(trimmed)) {
-        const c = D.contextMatch(trimmed, precedingText(node, 400), settings.packs);
+        // A value's own row label wins (e.g. "Phone" next to a number stays visible even when an
+        // "Account" row sits just above it). Fall back to nearby text only when there's no short
+        // field label.
+        const lab = rowLabel(node);
+        let c = lab ? D.contextMatch(trimmed, lab, settings.packs) : null;
+        if (!c && (!lab || lab.length > 30)) c = D.contextMatch(trimmed, precedingText(node, 400), settings.packs);
         if (c) {
           node.nodeValue = t.replace(trimmed, c.token);
           if (node.parentElement && node.parentElement.tagName !== 'TITLE') highlightTokens(node, [c.token]);
@@ -122,6 +127,29 @@
     node.nodeValue = r.text;
     if (parent.tagName !== 'TITLE') highlightTokens(node, r.hits.map(h => h.token));
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
+  }
+
+  // The label that belongs to a value in table / grid / definition-list layouts, where the label
+  // isn't the text right before the value in page order (e.g. a column of labels next to a column
+  // of values). Checks previous siblings of the value's ancestors, and matches rows by position
+  // when two sibling columns have the same number of children.
+  function labelLike(t) { return !!t && t.length <= 80 && !/\d/.test(t) && !/\[[A-Z0-9 #]+\]/.test(t); }
+  function rowLabel(node) {
+    let a = node.parentElement;
+    for (let i = 0; a && i < 5; i++, a = a.parentElement) {
+      // Side-by-side columns (a column of labels next to a column of values): match by position.
+      // Checked first, because in a value column the item just above is another value.
+      const col = a.parentElement;
+      if (col && !/^(?:TR|TBODY|THEAD|TABLE|DL|UL|OL)$/.test(col.tagName) && col.previousElementSibling &&
+          col.children.length >= 2 && col.previousElementSibling.children.length === col.children.length) {
+        const idx = Array.prototype.indexOf.call(col.children, a);
+        const lab = textOf(col.previousElementSibling.children[idx]);
+        if (labelLike(lab)) return lab;
+      }
+      const prev = a.previousElementSibling;
+      if (prev && !isOurs(prev)) { const pt = textOf(prev); if (labelLike(pt)) return pt; }
+    }
+    return '';
   }
 
   const splitGroups = new WeakSet();

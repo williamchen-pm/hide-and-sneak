@@ -211,3 +211,30 @@ test('backup-code context must directly precede the list (no sentence break)', (
   assert.equal(m('1234567', 'New backup codes can be generated from your profile. Model RTX4090 ships in 2 days. September 2026'), null);
   assert.equal(m('a1b2c3d4', 'Keep these backup codes somewhere safe but accessible. Backup Codes'), '[BACKUP CODE]');
 });
+
+test('bank pages: routing and account numbers with loose layouts (BoA-style, 2026-09-30)', () => {
+  const m = (v, ctx) => (D.contextMatch(v, ctx) || {}).token || null;
+  // Second routing number, after "(paper & electronic)", labelled "(wires)"
+  assert.equal(m('026009593', 'Routing number [ROUTING #] (paper & electronic)'), '[ROUTING #]');
+  assert.equal(m('026009593', 'Wire transfers'), '[ROUTING #]');
+  assert.equal(m('123456789', 'Routing number'), null, 'fails ABA checksum');
+  // Account number with helper text between label and value
+  assert.equal(m('000123456789', 'Account number Your full account number is'), '[ACCOUNT #]');
+  assert.equal(m('000123456789', 'Account number Show full account number'), '[ACCOUNT #]');
+  // Stay visible
+  assert.equal(m('12345678', 'Rewards points'), null);
+  assert.equal(m('20090902', 'Account opened. Date'), null, 'sentence break');
+});
+
+test('last-4 pack is opt-in', () => {
+  const r = (t, packs) => D.redactText(t, packs).text;
+  for (const t of ['Personal Checking - 4821', 'Visa ending in 4242', 'Card •••• 4242', 'Account ****4821'])
+    assert.equal(r(t), t, 'off by default: ' + t);
+  const on = { last4: true };
+  assert.equal(r('Personal Checking - 4821', on), 'Personal Checking - [LAST 4]');
+  assert.equal(r('Visa ending in 4242', on), 'Visa ending in [LAST 4]');
+  assert.equal(r('Card •••• 4242', on), 'Card •••• [LAST 4]');
+  assert.equal(r('Account ****4821', on), 'Account ****[LAST 4]');
+  assert.equal(r('Checking - 2026 summary', on).includes('[LAST 4]'), true, 'known trade-off: year after a dash');
+  assert.equal(r('Meeting at 4pm, room 4821', on), 'Meeting at 4pm, room 4821');
+});

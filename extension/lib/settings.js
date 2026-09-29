@@ -3,7 +3,7 @@
   'use strict';
   const DEFAULTS = {
     agentMode: false,
-    packs: { identity: true, payments: true, credentials: true, contact: false, job: true },
+    packs: { identity: true, payments: true, credentials: true, contact: false, job: true, last4: false },
     pageRules: [],      // URL patterns, e.g. "https://www.amazon.com/cpe/yourpayments/*"
     keywords: [],       // phrases to redact
     siteOff: [],        // hostnames where protection is skipped

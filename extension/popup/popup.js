@@ -4,6 +4,7 @@ const PACKS = [
   ['credentials', 'Passwords & 2FA codes'],
   ['job', 'Job applications (salary, demographics)'],
   ['contact', 'Contact info (phone, address)'],
+  ['last4', 'Last 4 digits of cards & accounts'],
 ];
 const $ = (id) => document.getElementById(id);
 

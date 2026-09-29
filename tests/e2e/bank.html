@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Bank account page (fixture)</title>
+<!-- Common bank "Account Information" layouts, built without looking at any real bank page
+     (2026-09-30). All numbers are fake or public test values. Add ?last4=1 to turn on the Last-4 pack. -->
+<script src="../../demo/demo-shim.js"></script><script src="../../extension/lib/detect.js"></script><script src="../../extension/content/engine.js"></script>
+<style>.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)} .row{display:flex;gap:40px} .cols{display:flex;gap:40px}</style></head>
+<body>
+<h2 id="hdr">Personal Checking - 4821</h2>
+<p><span id="bal">$3,268.09</span> Available balance</p>
+
+<h3>Layout A: label row, hidden helper text, show/hide link</h3>
+<div class="row"><div>Account number</div><div><span class="sr">Your full account number is</span><span id="acctA">000123456789</span> <a href="#">Hide full account number</a></div></div>
+<div class="row"><div>Routing number</div><div><span id="rtA1">021000021</span> (paper &amp; electronic)<br><span id="rtA2">026009593</span> (wires)</div></div>
+<div class="row"><div>Account opened date</div><div id="opened">09/02/2009</div></div>
+
+<h3>Layout B: definition list</h3>
+<dl><dt>Account number</dt><dd><span id="acctB">4567 8901 2345</span></dd><dt>ABA routing</dt><dd id="rtB">121000358</dd><dt>Rewards points</dt><dd id="pts">12345678</dd></dl>
+
+<h3>Layout C: a column of labels next to a column of values</h3>
+<div class="cols"><div><div>Type</div><div>Account number</div><div>Wire routing</div><div>Member since</div></div>
+<div><div>Adv Plus Banking</div><div id="acctC">987654321098</div><div id="rtC">026009593</div><div id="since">2009</div></div></div>
+
+<h3>Layout D: table</h3>
+<table><tr><th>Account</th><td id="acctD">55501234567</td></tr><tr><th>Phone</th><td id="phone">8004321000</td></tr></table>
+</body></html>
