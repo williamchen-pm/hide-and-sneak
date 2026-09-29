@@ -54,4 +54,19 @@ $('agent').onchange = async () => {
   render().then(() => requestAnimationFrame(() => document.body.classList.add('ready')));
 };
 $('opts').onclick = (e) => { e.preventDefault(); chrome.runtime.openOptionsPage(); };
+
+// Feedback: open a prefilled GitHub issue form. Only the extension version and the site's domain
+// are included (never the full URL, which can contain private tokens), and only when the user clicks.
+const REPO = 'https://github.com/williamchen-pm/hide-and-sneak';
+const VERSION = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
+$('ver').textContent = 'BETA · v' + chrome.runtime.getManifest().version;
+document.querySelectorAll('.report a').forEach(a => a.onclick = async (e) => {
+  e.preventDefault();
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  let host = '';
+  try { host = new URL(tab.url).hostname; } catch (_) {}
+  const q = new URLSearchParams({ template: a.dataset.template, version: VERSION });
+  if (host && a.dataset.template !== '4-idea.yml') q.set('site', host);
+  chrome.tabs.create({ url: REPO + '/issues/new?' + q.toString() });
+});
 render().then(() => requestAnimationFrame(() => document.body.classList.add('ready')));

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Found a way around the protection?
+    url: https://github.com/williamchen-pm/hide-and-sneak/security/advisories/new
+    about: Please report bypasses privately so they can be fixed before they're public.

@@ -1,0 +1,29 @@
+name: "💥 Site broke or got slow"
+description: A page stopped working, looked wrong, or felt slow while Agent Mode was on.
+title: "[Site issue] "
+labels: ["site-issue"]
+body:
+  - type: input
+    id: site
+    attributes:
+      label: Site
+      description: The domain only.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead? Does it go away with Agent Mode off?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Optional. Black out anything private.
+  - type: input
+    id: version
+    attributes:
+      label: Hide & Sneak version
+      placeholder: 0.9.0

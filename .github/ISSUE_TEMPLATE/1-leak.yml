@@ -1,0 +1,54 @@
+name: "🔓 Something slipped through"
+description: Sensitive info was still visible (or fillable) while Agent Mode was on.
+title: "[Leak] "
+labels: ["leak"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Hide & Sneak safer.
+        **Never paste real numbers, codes, or passwords here.** Describe what showed, and black out any sensitive values in screenshots.
+        Found a way to *deliberately get around* the protection? Please report it privately instead (see SECURITY.md).
+  - type: input
+    id: site
+    attributes:
+      label: Site
+      description: The domain only (e.g. mail.google.com). No full URLs, which can contain private tokens.
+      placeholder: mail.google.com
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What showed?
+      options:
+        - 2FA / verification code
+        - Backup or recovery code
+        - Password or PIN
+        - Card number / expiry / CVV
+        - Bank account or routing number
+        - SSN or ID number
+        - API key or token
+        - Login / reset link
+        - A form field that should have been locked
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where on the page?
+      description: e.g. "in the email body, on its own line under 'Enter this code'", or "after clicking Show full account number".
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (sensitive values blacked out)
+      description: Drag an image here. Black out the values first.
+  - type: input
+    id: version
+    attributes:
+      label: Hide & Sneak version
+      description: Shown in the popup, or on chrome://extensions.
+      placeholder: 0.9.0

@@ -1,0 +1,32 @@
+name: "🙈 Hidden by mistake"
+description: Something harmless was hidden or locked (e.g. an order number, a price, a normal form field).
+title: "[False positive] "
+labels: ["false-positive"]
+body:
+  - type: markdown
+    attributes:
+      value: "Please don't paste anything private. Describe the item, e.g. \"an Amazon order number like 112-xxxxxxx-xxxxxxx\"."
+  - type: input
+    id: site
+    attributes:
+      label: Site
+      description: The domain only (e.g. amazon.com).
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What was hidden, and what placeholder replaced it?
+      placeholder: "An order number became [ACCOUNT #]"
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Optional. Black out anything private.
+  - type: input
+    id: version
+    attributes:
+      label: Hide & Sneak version
+      placeholder: 0.9.0

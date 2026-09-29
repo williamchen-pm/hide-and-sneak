@@ -1,0 +1,16 @@
+name: "💡 Idea"
+description: Something Hide & Sneak should protect, or a way to make it easier to use.
+title: "[Idea] "
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What are you trying to do?
+      description: e.g. "I have my AI agent pay bills, and it can see my utility account number."
