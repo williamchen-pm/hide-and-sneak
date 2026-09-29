@@ -225,3 +225,4 @@ flowchart LR
 | 2026-09-29 | MVP scope confirmed: no whole-site blocking; Q8 / Test 1b deferred |
 | 2026-09-29 | Q6: inspected real Greenhouse and Lever forms; fixed combobox coverage and group markers; built `demo/job-application.html` (runs the real engine); added ATS fixture + demo e2e test |
 | 2026-09-29 | Added proposed backlog P-1 to P-4 (Presenting mode, screen-sharing checklist, mature language pack, README trust section) |
+| 2026-09-30 | Live Gmail fixes: split-label 2FA codes, backup-code lists. Coverage audit (`docs/AUDIT.md`); built engine gaps A1–A4 + Tier 1 patterns (0 → 16 of 28 audit samples); fixed a placeholder re-match loop |

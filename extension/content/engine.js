@@ -21,6 +21,7 @@
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'TEXTAREA', 'CANVAS', 'IFRAME', 'OBJECT']);
   const REDACT_ATTRS = ['title', 'aria-label', 'alt', 'placeholder', 'data-tooltip', 'aria-description'];
   const FIELD_SELECTOR = 'input, select, textarea';
+  const LINK_PLACEHOLDER = '#hidden-by-hide-and-sneak';
 
   let settings = null, extraRules = [], observer = null, active = true, sessionId = null;
   const locked = new Map();        // element -> { kind, marker, info }
@@ -56,9 +57,13 @@
   // ---------- 2. text + attribute redaction ----------
   function isOurs(el) { return el && el.closest && el.closest('[' + HNS_ATTR + ']'); }
 
+  // Safety net: a text node should need at most one or two rewrites. If a rule ever keeps
+  // matching its own output, stop rewriting that node instead of freezing the page.
+  const rewrites = new WeakMap();
   function redactTextNode(node) {
     const t = node.nodeValue;
     if (!t || t.length < 3) return;
+    if ((rewrites.get(node) || 0) >= 5) return;
     const parent = node.parentElement;
     if (!parent || SKIP_TAGS.has(parent.tagName) || isOurs(parent)) return;
     const r = D.redactText(t, settings.packs, extraRules);
@@ -74,6 +79,7 @@
       }
       return;
     }
+    rewrites.set(node, (rewrites.get(node) || 0) + 1);
     node.nodeValue = r.text;
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
   }
@@ -102,6 +108,18 @@
 
   function redactAttrs(el) {
     if (isOurs(el)) return;
+    // Links: one-time login / reset links carry account access in the URL itself. Neutralize the
+    // target (the visible text stays), so the agent can neither read nor follow it.
+    if ((el.tagName === 'A' || el.tagName === 'AREA') && el.hasAttribute('href')) {
+      const h = el.getAttribute('href');
+      if (h && h !== LINK_PLACEHOLDER) {
+        const r = D.redactText(h, settings.packs, extraRules);
+        if (r.hits.length) {
+          el.setAttribute('href', LINK_PLACEHOLDER);
+          for (const hit of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: hit.ruleId, pack: hit.pack, token: hit.token, where: 'attr:href' }); }
+        }
+      }
+    }
     for (const a of REDACT_ATTRS) {
       const v = el.getAttribute && el.getAttribute(a);
       if (!v) continue;
@@ -137,7 +155,7 @@
       else {
         redactAttrs(n);
         if (n.matches && n.matches(FIELD_SELECTOR)) considerField(n);
-        if (n.shadowRoot) processTree(n.shadowRoot);
+        if (n.shadowRoot) { observeShadow(n.shadowRoot); processTree(n.shadowRoot); }
       }
       n = walker.nextNode();
     }
@@ -184,7 +202,14 @@
     const meta = { type: el.type || el.tagName.toLowerCase(), autocomplete: el.getAttribute('autocomplete') || '',
                    name: el.name || '', id: el.id || '', labelText: fieldContext(el) };
     const c = D.classifyField(meta, settings.packs);
-    if (c) lockField(el, c);
+    if (c) { lockField(el, c); return; }
+    // A4: an unlabeled field that already holds a sensitive value (e.g. a pre-filled SSN on a
+    // profile page). Lock it too. Contact details are meant to be filled in, so they're ignored.
+    const v = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') ? '' : (el.value || '');
+    if (v && v.length >= 4) {
+      const hit = D.redactText(v, settings.packs, extraRules).hits.find(h => h.pack !== 'contact');
+      if (hit) lockField(el, { pack: hit.pack, label: 'field holding a ' + hit.token.replace(/[\[\]]/g, '').toLowerCase(), reason: 'value matches ' + hit.ruleId });
+    }
   }
 
   // Clears the live value AND the HTML attributes that hold the original (value/checked/selected),
@@ -375,6 +400,15 @@
       queuePosition();
     });
   }
+  const OBSERVE_OPTS = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: REDACT_ATTRS.concat(['href']) };
+  const observedRoots = new WeakSet();
+  // A3: the document observer can't see inside shadow roots, so watch each one we find.
+  function observeShadow(root) {
+    if (!observer || observedRoots.has(root)) return;
+    observedRoots.add(root);
+    observer.observe(root, OBSERVE_OPTS);
+  }
+
   function startObserver() {
     observer = new MutationObserver((muts) => {
       if (!active) return;
@@ -384,12 +418,17 @@
         else if (m.type === 'attributes' && m.target.nodeType === 1 && !isOurs(m.target)) redactAttrs(m.target);
       }
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: REDACT_ATTRS });
+    observer.observe(document.documentElement, OBSERVE_OPTS);
   }
 
   // ---------- lifecycle ----------
   function firstPass() {
-    try { processTree(document.body || document.documentElement); } catch (e) { failClosed(); return; }
+    try {
+      processTree(document.body || document.documentElement);
+      // A1: the tab title (e.g. Gmail shows the open email's subject). Agents read tab titles.
+      const t = document.querySelector('title');
+      if (t) processTree(t);
+    } catch (e) { failClosed(); return; }
     positionMarkers();
     revealPage();
     updateBanner();

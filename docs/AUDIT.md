@@ -1,6 +1,6 @@
 # Coverage Audit
 
-*2026-09-30 · Method: 28 realistic samples run through `detect.js` (`node tests/audit-corpus.js`) plus a review of what the engine scans. Result before this audit: **0 of 28 caught.***
+*2026-09-30 · Method: 28 realistic samples run through `detect.js` (`node tests/audit-corpus.js`) plus a review of what the engine scans. Result before this audit: **0 of 28 caught.** After building section A + Tier 1 (same day): **16 of 28 caught**, with the 12 remaining misses all Tier 2/3.*
 
 ## A. Places the engine doesn't look (highest priority)
 
@@ -42,3 +42,18 @@ These leak regardless of how good the patterns are.
 ## Recommendation
 
 Build **section A plus Tier 1** before the GitHub release. The four engine gaps and the Tier 1 patterns are all small, high-value, and low on false positives. Tab titles and login links in particular are the kinds of leaks a reviewer would find in minutes. Tier 2 goes into v1.1, and Tier 3 into the backlog.
+
+## Status (2026-09-30)
+
+**Built: section A + Tier 1.**
+- **A1 tab titles:** scanned at load and whenever the page changes them.
+- **A2 link targets:** login/reset links are neutralized (`href` → `#hidden-by-hide-and-sneak`), and the visible link text stays.
+- **A3 shadow DOM:** each shadow root found is now observed for later changes.
+- **A4 pre-filled fields:** unlabeled fields that hold a sensitive value (other than contact info) get locked and cleared.
+- **Tier 1 patterns:** passwords and PINs in text, API keys with known prefixes, private keys, login/reset links, card expiry, and email addresses (Contact pack, off by default).
+
+**Bug found while building:** the new password rule re-matched its own `[PASSWORD]` placeholder and froze the page in an endless rewrite loop. Two fixes:
+- The detector now never matches an existing placeholder (unit-tested, and redaction is idempotent).
+- The engine caps rewrites per text node as a safety net.
+
+**Tests:** 21 unit test groups; `tests/e2e/audit.html` + `audit.js` cover A1–A4. All earlier end-to-end checks still pass.

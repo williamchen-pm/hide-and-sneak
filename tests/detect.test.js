@@ -157,3 +157,46 @@ test('context matching: backup/recovery code lists (Activision-style table, 2026
   assert.equal(m('a1b2c3d4', 'Your order'), null, 'no backup-code context');
   assert.equal(m('RTX4090', 'We shipped your GPU'), null);
 });
+
+test('audit Tier 1: credentials in text', () => {
+  const r = (t, packs) => D.redactText(t, packs).text;
+  assert.equal(r('Your temporary password is: Xy7!qP2m'), 'Your temporary password is: [PASSWORD]');
+  assert.equal(r('Username: jdoe  Password: hunter2Blue!'), 'Username: jdoe  Password: [PASSWORD]');
+  assert.equal(r('Wi-Fi password: SunnyDays2026'), 'Wi-Fi password: [PASSWORD]');
+  assert.equal(r('Your new PIN is 4821'), 'Your new PIN is [PIN]');
+  assert.equal(r('ghp_16C7e42F292c6912E7710c838347Ae178B4a'), '[API KEY]');
+  assert.equal(r('key sk-proj-4f9aB2cD8eF1gH3iJ5kL7mN9pQ1rS3tU5 here'), 'key [API KEY] here');
+  assert.equal(r('AKIAIOSFODNN7EXAMPLE'), '[API KEY]');
+  assert.equal(r('sk_live_51H8xYzAbCdEfGhIjKlMnOp'), '[API KEY]');
+  assert.equal(r('AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'), '[API KEY]');
+  assert.equal(r('xoxb-123456789012-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx'), '[API KEY]');
+  assert.equal(r('eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTYifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'), '[API KEY]');
+  assert.equal(r('-----BEGIN RSA PRIVATE KEY-----\nMIIEow\n-----END RSA PRIVATE KEY-----'), '[PRIVATE KEY]');
+  assert.equal(r('Reset: https://example.com/reset-password?token=9f8e7d6c5b4a3210fedcba now'), 'Reset: [LOGIN LINK] now');
+  assert.equal(r('https://app.example.com/magic/aZ3kP9qL2mN8xV5tR1wY'), '[LOGIN LINK]');
+});
+test('audit Tier 1: payments + contact', () => {
+  const r = (t, packs) => D.redactText(t, packs).text;
+  assert.equal(r('Exp: 04/28'), 'Exp: [CARD EXPIRY]');
+  assert.equal(r('Valid thru 12/2027'), 'Valid thru [CARD EXPIRY]');
+  assert.equal(r('jordan.rivera@example.com'), 'jordan.rivera@example.com', 'contact pack off by default');
+  assert.equal(r('Mail jordan.rivera@example.com today', { contact: true }), 'Mail [EMAIL] today');
+});
+test('audit Tier 1: things that must stay visible', () => {
+  const r = (t) => D.redactText(t).text;
+  for (const t of [
+    'Forgot your password? Click here', 'Reset your password.', 'Password must be 8+ characters',
+    'It will expire in 30 minutes', 'Expires 2026', 'https://github.com/login', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30',
+    'https://docs.github.com/articles/configuring-two-factor-authentication', 'The task-force met at the desk-top',
+    'PIN pad', 'Your PIN must be 4 digits', 'Use a passphrase you can remember', 'sk-8 skateboard',
+  ]) assert.equal(r(t), t, t);
+});
+
+test('placeholders never re-match (infinite-loop guard)', () => {
+  for (const t of ['Your temporary password is: [PASSWORD]', 'Password: [PASSWORD]', 'PIN: [PIN]', 'Your code is [2FA CODE]',
+                   'Account #: [ACCOUNT #]', 'Exp: [CARD EXPIRY]', 'SSN: [SSN]'])
+    assert.equal(D.redactText(t).hits.length, 0, t);
+  // Idempotent: redacting twice gives the same text.
+  const once = D.redactText('Password: Xy7!qP2m, PIN is 4821, card 4111 1111 1111 1111').text;
+  assert.equal(D.redactText(once).text, once);
+});

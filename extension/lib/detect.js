@@ -47,6 +47,8 @@
     { id: 'card-amex', pack: 'payments', token: '[CARD #]', group: 1,
       re: /(?<![\d-])(3[47]\d{2}[ -]?\d{6}[ -]?\d{5})(?![\d-])/dg,
       check: (v) => luhnValid(onlyDigits(v)) },
+    { id: 'card-expiry', pack: 'payments', token: '[CARD EXPIRY]', group: 1,
+      re: /\b(?:exp(?:iry|iration|ires)?(?:\s+date)?\.?|valid\s+thru)[\s:]{0,4}((?:0[1-9]|1[0-2])\s?\/\s?(?:\d{4}|\d{2}))(?!\d)/dgi },
     { id: 'cvv-keyword', pack: 'payments', token: '[CVV]', group: 1,
       re: /(?:\bCVV2?\b|\bCVC2?\b|\bCID\b|security\s+code)[\s:#.\-]{0,8}(\d{3,4})(?!\d)/dgi },
     { id: 'routing-keyword', pack: 'payments', token: '[ROUTING #]', group: 1,
@@ -63,9 +65,25 @@
     { id: 'otp-after', pack: 'credentials', token: '[2FA CODE]', group: 1,
       re: /(?<!\d)(\d{4,8}|\d{3}[ -]\d{3})\s+is\s+your\s+(?:[\w-]+\s+){0,3}(?:code|passcode|OTP|PIN)\b/dgi },
 
+    { id: 'password-keyword', pack: 'credentials', token: '[PASSWORD]', group: 1,
+      // Requires "is" or a colon, so "Forgot your password? Click here" is left alone.
+      re: /(?:\b(?:temporary\s+|new\s+|one[- ]time\s+|wi-?fi\s+)?(?:password|passphrase)\b)(?:\s+is\s*:?|\s*:)\s*([^\s<>"']{4,64})/dgi },
+    { id: 'pin-keyword', pack: 'credentials', token: '[PIN]', group: 1,
+      re: /\bPIN\b(?:\s+(?:is|number|code))?(?:\s+is)?[\s:#]{0,4}(\d{4,8})(?!\d)/dg },
+    { id: 'api-key', pack: 'credentials', token: '[API KEY]', group: 1,
+      re: /\b((?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{22,}|sk-(?:proj-|ant-(?:api\d+-)?|live-)?[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|AIza[0-9A-Za-z_-]{35}|xox[baprs]-[A-Za-z0-9-]{10,}|eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{10,})/dg },
+    { id: 'private-key', pack: 'credentials', token: '[PRIVATE KEY]', group: 1,
+      re: /(-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----[\s\S]*?(?:-----END (?:[A-Z0-9]+ )*PRIVATE KEY-----|$))/dg },
+    { id: 'login-link', pack: 'credentials', token: '[LOGIN LINK]', group: 1,
+      // One-time login / reset / verification links: a token-like query parameter, or a long
+      // opaque path segment after /magic, /reset, /verify, /confirm, /login, /signin.
+      re: /(\bhttps?:\/\/[^\s"'<>]*?(?:[?&#](?:token|reset_token|login_token|access_token|auth_token|magic|otp|code|key|signature|sig)=[A-Za-z0-9._~%-]{8,}|\/(?:magic|reset|verify|confirm|login|signin|sign-in|auth)[\w-]*\/[A-Za-z0-9_-]{16,})[^\s"'<>]*)/dgi },
+
     // Contact (off by default)
     { id: 'phone-us', pack: 'contact', token: '[PHONE]', group: 1,
       re: /(?<![\d-])((?:\+?1[ .-]?)?(?:\(\d{3}\)\s?|\d{3}[ .-])\d{3}[ .-]\d{4})(?![\d-])/dg },
+    { id: 'email', pack: 'contact', token: '[EMAIL]', group: 1,
+      re: /(?<![\w.%+-])([A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})\b/dg },
     { id: 'street-address', pack: 'contact', token: '[ADDRESS]', group: 1,
       re: /\b(\d{1,6}\s+(?:[NSEW]\.?\s+)?(?:[A-Z][a-zA-Z]+\s+){1,4}(?:St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Blvd|Boulevard|Ln|Lane|Way|Ct|Court|Pl|Place|Ter|Terrace|Cir|Circle|Pkwy|Parkway|Hwy|Highway)\.?(?:,?\s+(?:Apt|Unit|Suite|Ste|#)\.?\s*[A-Za-z0-9-]+)?)\b/dg },
 
@@ -73,6 +91,8 @@
     { id: 'salary-keyword', pack: 'job', token: '[SALARY]', group: 1,
       re: /(?:salary|compensation|base\s+pay|pay\s+(?:rate|expectation)s?|desired\s+pay|wage|annual\s+pay)[^.\n]{0,40}?(\$\s?\d[\d,]*(?:\.\d{2})?\s*(?:k|K)?(?:\s*(?:-|to|–)\s*\$?\s?\d[\d,]*(?:\.\d{2})?\s*(?:k|K)?)?)/dgi },
   ];
+
+  const PLACEHOLDER_RE = /^\s*(?:\[[A-Z0-9 #]+\]\s*)+$/;
 
   const DEFAULT_PACKS = { identity: true, payments: true, credentials: true, contact: false, job: true };
 
@@ -83,7 +103,9 @@
 
   /** Find non-overlapping matches. Returns [{start, end, token, ruleId, pack}] sorted by start. */
   function findMatches(text, packs, extraRules) {
-    if (!text || text.length < 3 || !/\d/.test(text) && !(extraRules && extraRules.length)) return [];
+    if (!text || text.length < 3) return [];
+    // Cheap pre-check: most text has none of these cues, so skip the full rule set.
+    if (!(extraRules && extraRules.length) && !/\d|@|pass|key|token|BEGIN|eyJ|xox|http/i.test(text)) return [];
     const hits = [];
     for (const r of enabledRules(packs, extraRules)) {
       r.re.lastIndex = 0;
@@ -94,6 +116,9 @@
         const value = m[g];
         if (value == null) continue;
         if (r.check && !r.check(value)) continue;
+        // Never re-match our own placeholders (e.g. "password is: [PASSWORD]"), or a rule could
+        // keep replacing its own output forever.
+        if (PLACEHOLDER_RE.test(value)) continue;
         const [start, end] = m.indices[g];
         hits.push({ start, end, token: r.token, ruleId: r.id, pack: r.pack });
       }

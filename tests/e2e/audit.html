@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Your login code is 826774 - Gmail</title>
+<!-- Regression page for the 2026-09-30 coverage audit (docs/AUDIT.md): tab title, link targets,
+     late shadow-DOM content, and sensitive values in unlabeled fields. Loads the real engine via the demo shim. -->
+<script src="../../demo/demo-shim.js"></script><script src="../../extension/lib/detect.js"></script><script src="../../extension/content/engine.js"></script></head>
+<body>
+<p><a id="magic" href="https://example.com/login?token=9f8e7d6c5b4a3210fedcba">Log me in</a>
+   <a id="reset" href="https://app.example.com/reset/aZ3kP9qL2mN8xV5tR1wYq">Reset password</a>
+   <a id="norm" href="https://github.com/login">GitHub sign in</a>
+   <a id="yt" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30">Video</a></p>
+<p id="key">Your deploy key: sk-proj-4f9aB2cD8eF1gH3iJ5kL7mN9pQ1rS3tU5</p>
+<p id="pw">Your temporary password is: Xy7!qP2m</p>
+<p id="forgot">Forgot your password? Click here.</p>
+<p id="exp">Visa ending 4242, exp 04/28</p>
+<shadow-card id="sc"></shadow-card>
+<form><input id="profile-ssn" name="field_17" type="text" value="123-45-6789"><input id="profile-name" name="field_18" type="text" value="Jordan"></form>
+<script>
+  customElements.define('shadow-card', class extends HTMLElement { constructor(){ super(); this.attachShadow({mode:'open'}).innerHTML = '<p id="s1">Loading…</p>'; } });
+  setTimeout(() => { document.getElementById('sc').shadowRoot.getElementById('s1').textContent = 'Your new PIN is 4821'; }, 400);
+  setTimeout(() => { document.title = 'Your verification code is 551902 - Gmail'; }, 500);
+</script>
+</body></html>
