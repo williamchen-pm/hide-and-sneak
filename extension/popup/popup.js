@@ -36,6 +36,8 @@ async function render() {
     cb.onchange = async () => { const cur = await HNSSettings.getSettings(); cur.packs[key] = cb.checked; await HNSSettings.setSettings({ packs: cur.packs }); };
     $('packs').appendChild(l);
   }
+  $('highlight').checked = s.highlight !== false;
+  $('highlight').onchange = async () => { await HNSSettings.setSettings({ highlight: $('highlight').checked }); };
   $('siteoff').onchange = async () => {
     const cur = await HNSSettings.getSettings();
     const set = new Set(cur.siteOff);

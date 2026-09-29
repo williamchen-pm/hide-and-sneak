@@ -7,6 +7,7 @@
     pageRules: [],      // URL patterns, e.g. "https://www.amazon.com/cpe/yourpayments/*"
     keywords: [],       // phrases to redact
     siteOff: [],        // hostnames where protection is skipped
+    highlight: true,    // paint hidden items as a redaction bar
   };
   async function getSettings() {
     const { settings } = await chrome.storage.local.get('settings');

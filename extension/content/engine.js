@@ -57,6 +57,38 @@
   // ---------- 2. text + attribute redaction ----------
   function isOurs(el) { return el && el.closest && el.closest('[' + HNS_ATTR + ']'); }
 
+  // ---------- visual highlight of hidden items ----------
+  // Uses Chrome's CSS Custom Highlight API: paints the placeholders as a redaction bar without
+  // adding or changing any elements, so it can't break the page and costs almost nothing.
+  const HL_NAME = 'hns-hidden';
+  let hl = null;
+  function ensureHighlight() {
+    if (hl || settings.highlight === false) return hl;
+    if (typeof Highlight !== 'function' || !globalThis.CSS || !CSS.highlights) return null;
+    hl = new Highlight();
+    CSS.highlights.set(HL_NAME, hl);
+    const st = document.createElement('style');
+    st.setAttribute(HNS_ATTR, 'style');
+    st.textContent = '::highlight(' + HL_NAME + '){background-color:#1f1f1f;color:#ffd54f;}';
+    (document.head || document.documentElement).appendChild(st);
+    return hl;
+  }
+  // Add a highlight range for each placeholder we just wrote into `node`.
+  function highlightTokens(node, tokens) {
+    const h = ensureHighlight();
+    if (!h) return;
+    const text = node.nodeValue;
+    for (const tok of new Set(tokens)) {
+      let i = text.indexOf(tok);
+      while (i !== -1) {
+        const r = document.createRange();
+        r.setStart(node, i); r.setEnd(node, i + tok.length);
+        h.add(r);
+        i = text.indexOf(tok, i + tok.length);
+      }
+    }
+  }
+
   // Safety net: a text node should need at most one or two rewrites. If a rule ever keeps
   // matching its own output, stop rewriting that node instead of freezing the page.
   const rewrites = new WeakMap();
@@ -74,6 +106,7 @@
         const c = D.contextMatch(trimmed, precedingText(node, 400), settings.packs);
         if (c) {
           node.nodeValue = t.replace(trimmed, c.token);
+          if (node.parentElement && node.parentElement.tagName !== 'TITLE') highlightTokens(node, [c.token]);
           totalProtected++; log({ effect: 'redact', ruleId: c.ruleId, pack: c.pack, token: c.token, where: 'text+context' });
         }
       }
@@ -81,6 +114,7 @@
     }
     rewrites.set(node, (rewrites.get(node) || 0) + 1);
     node.nodeValue = r.text;
+    if (parent.tagName !== 'TITLE') highlightTokens(node, r.hits.map(h => h.token));
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
   }
 

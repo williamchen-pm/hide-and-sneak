@@ -136,6 +136,7 @@ flowchart LR
 | P-2 | **Screen-sharing checklist** in the README: share a single tab instead of the whole screen; use a separate "Presenting" Chrome profile or a Guest window; press Ctrl+Shift+B to hide the bookmarks bar | 💬 Proposed | ⬜ | No code. Extensions can't hide Chrome's URL bar, history suggestions, or bookmarks bar, so this is the honest workaround. |
 | P-3 | **Mature language pack** (optional, off by default) using an open word list with whole-word matching | 💬 Proposed | ⬜ | Custom "Protected words and phrases" rules already cover this. Check the word list's license before adopting it. Images are out of scope. |
 | P-4 | **"Why you can trust this extension"** README section: open source, no network access, no remote code, inert when Agent Mode is off | 💬 Proposed | ⬜ | Prompted by the Sept 2026 report that malicious extensions could hijack AI assistants, including Claude in Chrome. |
+| P-5 | **Sign-in hint:** README and lock marker say "Signing in? Turn off Agent Mode first" | 💬 Proposed | ⬜ | Agent Mode locks verification-code fields and neutralizes magic links, which also blocks the user's own sign-ins (by design). Raised during the 2026-09-30 Claude sign-in incident. |
 
 ### Out of scope
 
@@ -177,6 +178,7 @@ flowchart LR
 | 2026-09-29 | Turning on injects into open tabs without reloading; turning off unlocks fields in place without reloading | Reloading on turn-off would wipe the form the agent just filled, which is the whole job-application use case. Hidden text stays hidden until a manual reload, since originals are never stored. |
 | 2026-09-29 | Locked fields: clear value **and** the `value`/`checked`/`selected` attributes; clear on input events, a 400 ms sweep, and before submit; strip from submitted form data | e2e test found the original still readable in the HTML attribute, and a script write readable until the next sweep |
 | 2026-09-29 | Radio/checkbox question text: climb ancestors only while they contain no other fields, then read the label just before | First version read the whole form and locked an unrelated "authorized to work" question because the form mentioned salary |
+| 2026-09-30 | Highlight hidden items with the CSS Custom Highlight API (dark bar, amber text), with a popup toggle on by default | Makes hidden items easy to spot without adding or changing page elements, which could break React-style sites; Chrome paints it natively, so no lag. Shows the type of item only, since originals are never stored. |
 | 2026-09-29 | Lock markers cover the whole control for comboboxes and tiny inputs; radio/checkbox groups share one marker | Real Greenhouse EEO questions are React-Select widgets with a 3 px input; the per-option markers overlapped on grouped radios |
 | 2026-09-29 | Demo pages run the real engine through a small `chrome.*` shim (`demo/demo-shim.js`) instead of a separate demo implementation | The demo can't drift from what the extension actually does |
 | 2026-09-29 | Engine "already running" guard uses a DOM attribute, not a window flag | The extension (isolated world) and the demo page (main world) don't share `window`; both engines ran when the extension was on |
@@ -226,3 +228,4 @@ flowchart LR
 | 2026-09-29 | Q6: inspected real Greenhouse and Lever forms; fixed combobox coverage and group markers; built `demo/job-application.html` (runs the real engine); added ATS fixture + demo e2e test |
 | 2026-09-29 | Added proposed backlog P-1 to P-4 (Presenting mode, screen-sharing checklist, mature language pack, README trust section) |
 | 2026-09-30 | Live Gmail fixes: split-label 2FA codes, backup-code lists. Coverage audit (`docs/AUDIT.md`); built engine gaps A1–A4 + Tier 1 patterns (0 → 16 of 28 audit samples); fixed a placeholder re-match loop |
+| 2026-09-30 | Added visual highlighting of hidden items (popup toggle); backlog P-5 sign-in hint |
