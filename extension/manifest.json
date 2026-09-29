@@ -25,6 +25,6 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "minimum_chrome_version": "111",
+  "minimum_chrome_version": "120",
   "version_name": "0.9.0 beta"
 }

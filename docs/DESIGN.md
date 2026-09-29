@@ -94,10 +94,10 @@ flowchart LR
 | V1-10 | Popup: manual Agent Mode on/off toggle, badge (on / count / miss), pack toggles, per-site off (no reload on toggle; see decision log) | All | ✅ Agreed | 🟩 Built | §6.4 | State is correct after a reload |
 | V1-20 | First-run onboarding page | All | ✅ Agreed | 🟨 In progress | §6.5 | Setup in under 2 minutes with no rule-writing |
 | V1-21 | "Test my protection" self-test page | All | ✅ Agreed | ⬜ Not started | §6.5 | Pass/fail per item for the user's current rules; works offline |
-| V1-22 | Chrome Web Store listing: privacy disclosure, permission rationale, MIT license | All | ✅ Agreed | ⬜ Not started | §6.7 | Approved and installable |
-| V1-23 | Public GitHub repo: LICENSE, README, SECURITY.md, CHANGELOG, tagged releases with packaged .zip | All | ✅ Agreed | 🟨 In progress | §6.7 | Repo public; release .zip matches the store version |
-| V1-24 | Store assets: 128×128 icon, 440×280 promo tile, 1–5 screenshots (1280×800) | All | ✅ Agreed | 🟨 In progress | §6.7 | Assets meet Chrome Web Store specs |
-| V1-25 | Privacy policy page on GitHub Pages | All | ✅ Agreed | ⬜ Not started | §6.7 | URL live and matches the store's data disclosures |
+| V1-22 | Chrome Web Store listing: privacy disclosure, permission rationale, MIT license | All | ✅ Agreed | 🟨 In progress | §6.7 | Approved and installable |
+| V1-23 | Public GitHub repo: LICENSE, README, SECURITY.md, CHANGELOG, tagged releases with packaged .zip | All | ✅ Agreed | 🟩 Built | §6.7 | Repo public; release .zip matches the store version |
+| V1-24 | Store assets: 128×128 icon, 440×280 promo tile, 1–5 screenshots (1280×800) | All | ✅ Agreed | 🟩 Built | §6.7 | Assets meet Chrome Web Store specs |
+| V1-25 | Privacy policy page on GitHub Pages | All | ✅ Agreed | 🟩 Built | §6.7 | URL live and matches the store's data disclosures |
 | V1-26 | Pre-publish checks: original name and icon (R10); personal time and equipment (R11); clean-room vs Agent Browser Shield (R12) | All | ✅ Agreed | 🟨 In progress | §9 | R11 confirmed; name chosen (re-check the store before submitting); icon not yet designed |
 | V1-27 | Comparison test vs Agent Browser Shield; publish `COMPARISON.md` | All | ✅ Agreed | ⬜ Not started | §2.3 | Results for all four setups on the three demos, dated, with versions |
 | V1-28 | MAIN-world setter hook on locked fields, to close most of the ~400 ms script-write window | UC1, UC2 | ✅ Agreed | ⬜ Not started | §8 | A `javascript_tool` write to a locked field reads back empty immediately |
@@ -239,3 +239,4 @@ flowchart LR
 | 2026-09-30 | New marker wording (Protected), width tiers, fixed-layer positioning for pop-ups; `tests/e2e/modal.html` |
 | 2026-09-30 | Beta labeling (0.9.0), GitHub issue forms, popup report links, SECURITY.md, CHANGELOG.md, README beta/known-gaps/feedback sections |
 | 2026-09-30 | README rewritten for the public beta (beta warning, may-miss notice, feedback, trust section, screenshots); 2FA context spans one short colon-ended sentence (found while taking README screenshots) |
+| 2026-09-30 | Chrome Web Store kit: `docs/STORE_LISTING.md` (all form text), `privacy.html`, store images in `docs/store/`, `dist/hide-and-sneak-0.9.0.zip` (git-ignored); minimum Chrome 120 |
