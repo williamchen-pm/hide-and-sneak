@@ -10,3 +10,4 @@ First public release.
 - Blocks "Copy code / password / key" buttons and neutralizes one-time login links.
 - Protected pages, protected words and names, protection packs (Last 4 digits and Contact info are opt-in), and a local activity log that never stores original values.
 - Does nothing while Agent Mode is off. No network access, no data collected.
+- Known gaps are listed in the README; this is a beta and will miss some things on some sites.

@@ -238,3 +238,4 @@ flowchart LR
 | 2026-09-30 | Click-to-reveal account numbers: skip buttons/icons as labels; keep nearby-text fallback unless the label names a harmless field |
 | 2026-09-30 | New marker wording (Protected), width tiers, fixed-layer positioning for pop-ups; `tests/e2e/modal.html` |
 | 2026-09-30 | Beta labeling (0.9.0), GitHub issue forms, popup report links, SECURITY.md, CHANGELOG.md, README beta/known-gaps/feedback sections |
+| 2026-09-30 | README rewritten for the public beta (beta warning, may-miss notice, feedback, trust section, screenshots); 2FA context spans one short colon-ended sentence (found while taking README screenshots) |

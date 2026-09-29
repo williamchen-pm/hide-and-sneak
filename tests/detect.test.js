@@ -238,3 +238,10 @@ test('last-4 pack is opt-in', () => {
   assert.equal(r('Checking - 2026 summary', on).includes('[LAST 4]'), true, 'known trade-off: year after a dash');
   assert.equal(r('Meeting at 4pm, room 4821', on), 'Meeting at 4pm, room 4821');
 });
+
+test('2FA context can span one short sentence that ends with a colon', () => {
+  const m = (v, ctx) => (D.contextMatch(v, ctx) || {}).token || null;
+  assert.equal(m('482913', 'Hi Jordan, enter this code to finish signing in. It expires in 10 minutes:'), '[2FA CODE]');
+  assert.equal(m('2026', 'Enter this code in the app. ©'), null, 'copyright year after a sentence with "code"');
+  assert.equal(m('482913', 'Enter this code in the app. Thanks for banking with us'), null, 'no colon');
+});

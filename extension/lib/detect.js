@@ -168,7 +168,9 @@
       context: /\b(?:backup|recovery|scratch|emergency|one[- ]time)\s+(?:codes?|keys?)\b[^.!?]{0,40}$/i },
     { id: 'otp-context', pack: 'credentials', token: '[2FA CODE]',
       value: /^(?:\d{4,8}|\d{3}[ -]\d{3})$/,
-      context: /\b(?:code|passcode|OTP|PIN|verification|verify|one[- ]time|log[- ]?in|sign[- ]?in|2FA|MFA|authenticat\w*)\b[^.]{0,120}$/i },
+      // The keyword can be one short sentence back, as long as that sentence introduces the value
+      // with a colon ("…enter this code to finish signing in. It expires in 10 minutes:").
+      context: /\b(?:code|passcode|OTP|PIN|verification|verify|one[- ]time|log[- ]?in|sign[- ]?in|2FA|MFA|authenticat\w*)\b[^.]{0,120}(?:\.\s+[^.]{0,60}:\s*)?$/i },
     { id: 'ssn-context', pack: 'identity', token: '[SSN]',
       value: /^(?!000|666|9\d\d)\d{3}-?\d{2}-?\d{4}$/,
       context: /(?:\bSSN\b|social\s+security(?:\s+(?:number|no\.?|#))?|\bTIN\b)[\s:#.\-]{0,20}$/i },
