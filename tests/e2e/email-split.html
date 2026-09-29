@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Split-code email</title>
+<!-- Reproduces a real Gmail case (2026-09-30): the explanation and the 2FA code are in separate
+     elements, so single-text-node patterns miss the code. Also checks nearby numbers (ZIP, year)
+     are NOT hidden. Loads the real engine through the demo shim. -->
+<script src="../../demo/demo-shim.js"></script><script src="../../extension/lib/detect.js"></script><script src="../../extension/content/engine.js"></script></head>
+<body><h2 id="subj">Your login code is 826774</h2>
+<table><tr><td><p>Or enter this <span class="hl">code</span> to finish logging in to your account - it will expire in 30 minutes:</p></td></tr>
+<tr><td><div id="code" style="font-size:40px">826774</div></td></tr></table>
+<p>420 Taylor Street, San Francisco, CA <span id="zip">94102</span></p>
+<p>Copyright <span id="yr">2026</span></p>
+<div id="late"></div>
+<script>setTimeout(()=>{document.getElementById('late').innerHTML='<p>Your verification code:</p><p id="code2">551 902</p>'},300)</script>
+</body></html>

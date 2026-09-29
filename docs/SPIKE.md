@@ -213,3 +213,11 @@ The toolbar icon is outside the page viewport that the agent's screenshots and c
 **Fixture:** `tests/e2e/ats.html` reproduces both structures (simplified, no company data). `tests/e2e/demo.js` checks them.
 
 **Also changed:** "arbitration" now counts as a legal attestation (Greenhouse's "Agreement to Arbitrate"). Unit tests cover the real labels from both platforms.
+
+---
+
+## Live test: Gmail (2026-09-30)
+
+- **Found:** a Nextdoor login email showed `[2FA CODE]` in the subject and inbox preview, but the large code in the body (on its own line under "Or enter this code…") stayed visible. The label and the value were in separate elements, so the single-text-node patterns never saw both.
+- **Fix:** context-aware matching (`contextMatch` in `detect.js`). A standalone value (for example, 4–8 digits) is checked against the text just before it on the page. The lookback stops at the previous standalone number or placeholder, so one label only vouches for the value right after it. Rules cover 2FA codes, SSNs, routing numbers (with checksum), and account numbers.
+- **Regression checks:** `tests/e2e/email-split.html` confirms the split code is hidden, while a ZIP code and a copyright year right after it stay visible. Two new unit tests cover this.

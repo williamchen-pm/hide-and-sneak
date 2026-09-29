@@ -122,6 +122,44 @@
     }));
   }
 
+  // ---------- context-aware matching (value and its label live in different elements) ----------
+  // Real emails often split "Enter this code:" and "826774" into separate blocks, so the
+  // single-text-node patterns above never see both. These rules look at a standalone value
+  // plus the text that precedes it on the page.
+  const CONTEXT_RULES = [
+    { id: 'otp-context', pack: 'credentials', token: '[2FA CODE]',
+      value: /^(?:\d{4,8}|\d{3}[ -]\d{3})$/,
+      context: /\b(?:code|passcode|OTP|PIN|verification|verify|one[- ]time|log[- ]?in|sign[- ]?in|2FA|MFA|authenticat\w*)\b[^.]{0,120}$/i },
+    { id: 'ssn-context', pack: 'identity', token: '[SSN]',
+      value: /^(?!000|666|9\d\d)\d{3}-?\d{2}-?\d{4}$/,
+      context: /(?:\bSSN\b|social\s+security(?:\s+(?:number|no\.?|#))?|\bTIN\b)[\s:#.\-]{0,20}$/i },
+    { id: 'routing-context', pack: 'payments', token: '[ROUTING #]', check: (v) => abaValid(v),
+      value: /^\d{9}$/,
+      context: /(?:routing(?:\s+(?:number|no\.?|#))?|\bABA\b|\bRTN\b)[\s:#.\-]{0,20}$/i },
+    { id: 'account-context', pack: 'payments', token: '[ACCOUNT #]',
+      value: /^(?:\d[ -]?){5,16}\d$/,
+      context: /(?:\baccount|\bacct)\.?(?:\s+(?:number|no\.?|#))?[\s:#.\-]{0,20}$/i },
+  ];
+
+  /**
+   * value: the full (trimmed) text of a standalone text node.
+   * precedingText: up to ~200 chars of page text just before it.
+   * Returns { token, ruleId, pack } or null.
+   */
+  function contextMatch(value, precedingText, packs) {
+    const p = Object.assign({}, DEFAULT_PACKS, packs || {});
+    const v = (value || '').trim();
+    if (!v || v.length > 24) return null;
+    // Only the text after the last placeholder we inserted counts as context for this value.
+    const ctx = (precedingText || '').split(/\[[A-Z0-9 #]+\]/).pop().replace(/\s+/g, ' ').trim().slice(-200);
+    for (const r of CONTEXT_RULES) {
+      if (!p[r.pack] || !r.value.test(v)) continue;
+      if (r.check && !r.check(v.replace(/\D/g, ''))) continue;
+      if (r.context.test(ctx)) return { token: r.token, ruleId: r.id, pack: r.pack };
+    }
+    return null;
+  }
+
   // ---------- form field classification ----------
   const FIELD_AUTOCOMPLETE = {
     'cc-number': 'payments', 'cc-csc': 'payments', 'cc-exp': 'payments', 'cc-exp-month': 'payments', 'cc-exp-year': 'payments',
@@ -172,7 +210,7 @@
     return new RegExp('^' + esc + '$', 'i').test(url);
   }
 
-  const api = { luhnValid, abaValid, findMatches, redactText, keywordRules, classifyField, urlMatches, RULES, DEFAULT_PACKS };
+  const api = { luhnValid, abaValid, findMatches, redactText, contextMatch, keywordRules, classifyField, urlMatches, RULES, DEFAULT_PACKS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.HNSDetect = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

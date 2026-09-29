@@ -62,9 +62,41 @@
     const parent = node.parentElement;
     if (!parent || SKIP_TAGS.has(parent.tagName) || isOurs(parent)) return;
     const r = D.redactText(t, settings.packs, extraRules);
-    if (!r.hits.length) return;
+    if (!r.hits.length) {
+      // A bare value on its own (e.g. "826774" under "Or enter this code:"): check preceding text.
+      const trimmed = t.trim();
+      if (trimmed.length >= 4 && trimmed.length <= 24 && /\d/.test(trimmed)) {
+        const c = D.contextMatch(trimmed, precedingText(node, 200), settings.packs);
+        if (c) {
+          node.nodeValue = t.replace(trimmed, c.token);
+          totalProtected++; log({ effect: 'redact', ruleId: c.ruleId, pack: c.pack, token: c.token, where: 'text+context' });
+        }
+      }
+      return;
+    }
     node.nodeValue = r.text;
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
+  }
+
+  // Collect up to `max` characters of visible-ish text that comes before `node` in document order.
+  function precedingText(node, max) {
+    const root = document.body || document.documentElement;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) { const p = n.parentElement; return p && !SKIP_TAGS.has(p.tagName) && !isOurs(p) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; }
+    });
+    w.currentNode = node;
+    let out = '';
+    for (let i = 0; i < 40 && out.length < max; i++) {
+      const prev = w.previousNode();
+      if (!prev) break;
+      const v = prev.nodeValue.trim();
+      if (!v) continue;
+      // Stop at the previous standalone value or at a placeholder we already inserted, so one
+      // label ("Enter this code:") only ever vouches for the value right after it.
+      if (/^[\d\s()+.-]{4,}$/.test(v) || /\[[A-Z0-9 #]+\]/.test(v)) break;
+      out = v + ' ' + out;
+    }
+    return out.slice(-max);
   }
 
   function redactAttrs(el) {

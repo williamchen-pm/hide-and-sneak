@@ -123,3 +123,22 @@ test('field classification: real ATS labels (Greenhouse, Lever, 2026-09-29)', ()
                    'Current company', 'Preferred Name | What would you like us to call you?', 'Have you ever interviewed at Anthropic before?*'])
     assert.equal(c({ type: 'text', labelText: l }), null, l);
 });
+
+test('context matching: value and label in separate elements (Gmail/Nextdoor, 2026-09-30)', () => {
+  const m = (v, ctx, packs) => (D.contextMatch(v, ctx, packs) || {}).token || null;
+  assert.equal(m('826774', 'Or enter this code to finish logging in to your account - it will expire in 30 minutes:'), '[2FA CODE]');
+  assert.equal(m('482 913', 'Your verification code'), '[2FA CODE]');
+  assert.equal(m('123-45-6789', 'Social Security Number:'), '[SSN]');
+  assert.equal(m('021000021', 'Routing number'), '[ROUTING #]');
+  assert.equal(m('000123456789', 'Account number:'), '[ACCOUNT #]');
+  // Should NOT match
+  assert.equal(m('2026', 'Copyright'), null);
+  assert.equal(m('94102', 'San Francisco, CA'), null);
+  assert.equal(m('826774', 'Order total'), null);
+  assert.equal(m('123456789', 'Routing number'), null, 'fails ABA');
+  assert.equal(m('826774', 'Or enter this code:', { credentials: false }), null, 'pack off');
+});
+
+test('context matching ignores our own placeholders', () => {
+  assert.equal(D.contextMatch('94102', 'Your login code is [2FA CODE] 420 Taylor Street, San Francisco, CA'), null);
+});
