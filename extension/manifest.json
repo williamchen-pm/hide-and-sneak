@@ -2,11 +2,14 @@
   "manifest_version": 3,
   "name": "Hide & Sneak",
   "short_name": "Hide & Sneak",
-  "version": "0.9.0",
+  "version": "0.9.1",
+  "version_name": "0.9.1 beta",
   "description": "Let browser AI agents see only what they need. Hides sensitive text and locks sensitive form fields while Agent Mode is on.",
   "permissions": [
     "storage",
-    "scripting"
+    "scripting",
+    "contextMenus",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -18,6 +21,15 @@
     "default_popup": "popup/popup.html",
     "default_title": "Hide & Sneak"
   },
+  "commands": {
+    "toggle-agent-mode": {
+      "suggested_key": {
+        "default": "Alt+Shift+H",
+        "mac": "Alt+Shift+H"
+      },
+      "description": "Turn Agent Mode on or off"
+    }
+  },
   "options_page": "options/options.html",
   "icons": {
     "16": "icons/icon16.png",
@@ -25,6 +37,5 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "minimum_chrome_version": "120",
-  "version_name": "0.9.0 beta"
+  "minimum_chrome_version": "120"
 }

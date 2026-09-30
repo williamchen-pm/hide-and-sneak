@@ -8,6 +8,7 @@
     keywords: [],       // phrases to redact
     siteOff: [],        // hostnames where protection is skipped
     highlight: true,    // paint hidden items as a redaction bar
+    autoOffMinutes: 0,  // 0 = never. Otherwise Agent Mode turns itself off after this long.
   };
   async function getSettings() {
     const { settings } = await chrome.storage.local.get('settings');

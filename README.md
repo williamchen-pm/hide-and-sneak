@@ -4,10 +4,10 @@
 
 Hide & Sneak is a free, open-source Chrome extension for people who hand everyday tasks to a browser AI agent such as Claude in Chrome: triaging email, filling out job applications, shopping, paying bills. Turn on **Agent Mode** before you delegate. While it's on, sensitive text on the page is replaced with placeholders like `[2FA CODE]`, and form fields you should answer yourself are locked. When Agent Mode is off, the extension does nothing.
 
-**[Download the beta (v0.9.0)](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak-0.9.0.zip)** · [Install steps](#install) · Chrome Web Store version is in review
+**[Download the latest beta](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak.zip)** · [Install steps](#install) · Chrome Web Store version is in review
 
 > [!WARNING]
-> **This is a beta (v0.9.0).** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
+> **This is a beta.** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
 >
 > **Found a miss?** Please [report it](#feedback). Every report makes it better for everyone.
 
@@ -67,7 +67,7 @@ Hide & Sneak **may miss sensitive info on some sites**, especially unusual page 
 
 **Chrome Web Store:** in review. Until it's approved, install the beta directly (about a minute):
 
-1. Download **[hide-and-sneak-0.9.0.zip](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak-0.9.0.zip)** from the [latest release](https://github.com/williamchen-pm/hide-and-sneak/releases/latest) and unzip it.
+1. Download **[hide-and-sneak.zip](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak.zip)** from the [latest release](https://github.com/williamchen-pm/hide-and-sneak/releases/latest) and unzip it.
 2. In Chrome, type `chrome://extensions` in the address bar and press **Enter**.
 3. Turn on **Developer mode** (top-right).
 4. Click **Load unpacked** (top-left) and select the unzipped folder (the one that contains `manifest.json`).
@@ -80,6 +80,13 @@ Chrome may show a "developer mode extensions" notice on startup; that's normal f
 1. Click the **Hide & Sneak** shield in the toolbar and turn on **Agent Mode**. Open tabs are protected right away.
 2. Hand your task to your AI agent as usual. Hidden items show as highlighted placeholders, and protected fields show 🔒.
 3. When the agent is done, turn **Agent Mode** off. Protected fields unlock immediately, so nothing the agent filled in is lost. Reload a page to see hidden text again.
+
+**Handy extras:**
+
+- **It missed something?** Select it, right-click, and choose **Hide this from AI agents**. It's hidden right away and on every page from then on (you can edit the list under **Rules & activity log**).
+- **Your turn.** The popup lists the questions your agent couldn't answer. After you turn Agent Mode off, those fields are outlined on the page until you fill them in.
+- **Shortcut:** **Alt+Shift+H** turns Agent Mode on or off.
+- **Auto-off** (optional): have Agent Mode turn itself off after 30 minutes to 4 hours. It's off by default, since turning protection off in the middle of an agent's task would unlock fields.
 
 ![The Hide & Sneak popup with Agent Mode on, protection packs, and report links](docs/images/popup.png)
 

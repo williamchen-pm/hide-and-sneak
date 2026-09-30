@@ -356,6 +356,7 @@
     el.setAttribute('tabindex', '-1');
     el.setAttribute('aria-label', info.ariaText || ('Protected by Hide & Sneak (' + info.label + '). Ask the user to fill this in.'));
     state.cover = coverTarget(el);
+    state.human = info.isButton ? null : humanLabel(el, state, info);
     // Radio/checkbox groups share one marker that covers all their options.
     const gk = groupKey(el);
     if (gk && groupMarkers.has(gk)) state.marker = groupMarkers.get(gk);
@@ -366,6 +367,25 @@
     locked.set(el, state);
     totalProtected++;
     log({ effect: 'field-locked', pack: info.pack, field: info.label, reason: info.reason });
+  }
+
+  // The field's own question, for the "Your turn" list ("Desired base salary", not "salary question").
+  function humanLabel(el, st, info) {
+    const clip = (t) => (t || '').replace(/\s+/g, ' ').trim().replace(/[\s*:]+$/, '').slice(0, 60);
+    if (el.type === 'radio' || (el.type === 'checkbox' && groupMembers(el).length > 1)) {
+      const fs = el.closest('fieldset'), lg = fs && fs.querySelector('legend');
+      if (lg && textOf(lg)) return clip(textOf(lg));
+      const grp = el.closest('[role=radiogroup],[role=group]');
+      if (grp && grp.getAttribute('aria-label')) return clip(grp.getAttribute('aria-label'));
+      for (let c = st.cover, i = 0; c && i < 3; i++, c = c.parentElement) {
+        const p = c.previousElementSibling;
+        if (p && !p.matches(FIELD_SELECTOR) && !p.querySelector(FIELD_SELECTOR) && textOf(p)) return clip(textOf(p));
+      }
+    }
+    if (el.labels && el.labels.length && textOf(el.labels[0])) return clip(textOf(el.labels[0]));
+    if (st.prev.ariaLabel) return clip(st.prev.ariaLabel);
+    if (el.placeholder) return clip(el.placeholder);
+    return info.label;
   }
 
   // Custom widgets (e.g. Greenhouse's React-Select comboboxes) render a tiny <input> inside a
@@ -486,7 +506,71 @@
     }
   }
 
+  // ---------- "Your turn": after Agent Mode goes off, outline the fields left for the user ----------
+  let todo = [];                   // [{ els, target, label, done }]
+  const TODO_ATTR = 'data-hns-todo';
+  function ensureTodoStyle() {
+    if (document.getElementById('hns-todo-style')) return;
+    const st = document.createElement('style');
+    st.id = 'hns-todo-style';
+    st.setAttribute(HNS_ATTR, 'style');
+    st.textContent = '[' + TODO_ATTR + ']{outline:2px dashed #C98A00 !important;outline-offset:3px !important;border-radius:4px}' +
+      '[' + TODO_ATTR + '="flash"]{animation:hns-flash 1.2s ease-out 1}' +
+      '@keyframes hns-flash{0%{outline-color:#C98A00;box-shadow:0 0 0 8px rgba(201,138,0,.45)}100%{box-shadow:0 0 0 0 rgba(201,138,0,0)}}';
+    (document.head || document.documentElement).appendChild(st);
+  }
+  function filled(els) {
+    return els.some(el => (el.type === 'checkbox' || el.type === 'radio') ? el.checked
+      : el.tagName === 'SELECT' ? el.selectedIndex > 0 || (el.value && el.value !== '')
+      : !!(el.value && el.value.trim()));
+  }
+  // One entry per question: radio/checkbox groups share one.
+  function lockedEntries() {
+    const seen = new Map();
+    for (const [el, st] of locked) {
+      if (st.info.isButton || !el.isConnected) continue;
+      const k = groupKey(el) || el;
+      if (seen.has(k)) seen.get(k).els.push(el);
+      else seen.set(k, { els: [el], target: st.cover || el, label: st.human || st.info.label, done: false });
+    }
+    return [...seen.values()];
+  }
+  function startTodo(entries) {
+    clearTodo();
+    todo = entries;
+    if (!todo.length) return;
+    ensureTodoStyle();
+    for (const t of todo) {
+      t.target.setAttribute(TODO_ATTR, '');
+      t.check = () => { if (!t.done && filled(t.els)) { t.done = true; t.target.removeAttribute(TODO_ATTR); } };
+      t.els.forEach(el => ['input', 'change'].forEach(ev => el.addEventListener(ev, t.check)));
+    }
+  }
+  function clearTodo() {
+    for (const t of todo) {
+      t.target.removeAttribute(TODO_ATTR);
+      if (t.check) t.els.forEach(el => ['input', 'change'].forEach(ev => el.removeEventListener(ev, t.check)));
+    }
+    todo = [];
+  }
+  // Read by the popup (chrome.scripting runs in this same isolated world, so pages can't see or call these).
+  globalThis.__hnsTurn = () => active
+    ? { mode: 'locked', items: lockedEntries().map(e => ({ label: e.label })) }
+    : { mode: 'todo', items: todo.filter(t => t.target.isConnected).map(t => ({ label: t.label, done: t.done })) };
+  globalThis.__hnsJump = (i) => {
+    const list = active ? lockedEntries() : todo.filter(t => t.target.isConnected);
+    const t = list[i]; if (!t) return false;
+    t.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (!active) {
+      const el = t.els.find(e => !e.disabled) || t.els[0];
+      setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (_) {} }, 350);
+      if (!t.done) { t.target.setAttribute(TODO_ATTR, 'flash'); setTimeout(() => { if (!t.done) t.target.setAttribute(TODO_ATTR, ''); }, 1300); }
+    }
+    return true;
+  };
+
   function unlockAll() {
+    const entries = lockedEntries();
     for (const [el, st] of locked) {
       el.readOnly = st.prev.readOnly; el.disabled = st.prev.disabled;
       if (st.prev.tabIndex == null) el.removeAttribute('tabindex'); else el.setAttribute('tabindex', st.prev.tabIndex);
@@ -495,6 +579,9 @@
       ['input', 'change', 'paste', 'drop'].forEach(t => el.removeEventListener(t, st.onWrite, true));
     }
     locked.clear();
+    groupMarkers.clear();
+    startTodo(entries);
+    return entries.length;
   }
 
   // ---------- 4. protected pages ----------
@@ -593,9 +680,19 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', block, { once: true }); else block();
       return;
     }
+    activate(false);
+  }
+
+  let wired = false;
+  function activate(again) {
+    active = true;
+    clearTodo();
     startObserver();
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', firstPass, { once: true });
+    if (again) { firstPass(); }
+    else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', firstPass, { once: true });
     else firstPass();
+    if (wired) return;
+    wired = true;
     setInterval(() => { if (active) { enforceLocks(); checkRoute(); } }, 400);
     // Sweep locked fields right before any form submits, so a script write can't slip through.
     addEventListener('submit', () => { if (active) enforceLocks(); }, true);
@@ -611,9 +708,27 @@
     if (active && !next.agentMode) {
       active = false;
       if (observer) observer.disconnect();
-      unlockAll();
+      const n = unlockAll();
       revealPage();
-      updateBanner('Agent Mode off: fields unlocked. Reload the page to see hidden text.');
+      updateBanner(n ? `Agent Mode off: ${n} field${n === 1 ? ' is' : 's are'} waiting for you (outlined). Reload to see hidden text.`
+                     : 'Agent Mode off: fields unlocked. Reload the page to see hidden text.');
+    } else if (!active && next.agentMode && settings && !(next.siteOff || []).includes(location.hostname)) {
+      // Turned back on without a reload: protect this tab again.
+      settings = Object.assign({ packs: {}, pageRules: [], keywords: [], siteOff: [] }, next);
+      sessionId = next.sessionId || sessionId;
+      extraRules = D.keywordRules(settings.keywords);
+      if (pageProtected(location.href)) { log({ effect: 'page-blocked' }); totalProtected++; flush(); showBlockedPage('This page is off-limits to your AI agent while Agent Mode is on. Turn off Agent Mode to view it.'); return; }
+      activate(true);
+    } else if (active) {
+      // Settings changed while on (e.g. right-click "Hide this"): apply new words right away.
+      const kw = JSON.stringify(next.keywords || []);
+      if (kw !== JSON.stringify(settings.keywords || [])) {
+        settings.keywords = next.keywords || [];
+        extraRules = D.keywordRules(settings.keywords);
+        processTree(document.body || document.documentElement);
+        const t = document.querySelector('title'); if (t) processTree(t);
+        flush();
+      }
     }
   });
 

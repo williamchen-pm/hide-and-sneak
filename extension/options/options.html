@@ -30,7 +30,8 @@
       <li>Click the Hide &amp; Sneak icon in the Chrome toolbar. (If you don't see it, click the puzzle-piece icon and pin Hide &amp; Sneak.)</li>
       <li>Turn on <b>Agent Mode</b> before you hand a task to your AI agent.</li>
       <li>Sensitive text shows as placeholders like <code>[CARD #]</code>. Sensitive form fields show <b>🔒 Protected</b>. Your agent sees exactly what you see.</li>
-      <li>When the agent is done, turn Agent Mode off. Locked fields unlock right away so you can fill them in. Reload a page to see hidden text again.</li>
+      <li>When the agent is done, turn Agent Mode off. Locked fields unlock right away and stay outlined until you fill them in. Reload a page to see hidden text again.</li>
+      <li>Shortcut: <b>Alt+Shift+H</b> turns Agent Mode on or off.</li>
     </ol>
   </section>
 
@@ -43,7 +44,7 @@
 
   <h2>Protected words and phrases</h2>
   <section>
-    <p class="muted">One phrase per line. Matching text is replaced with <code>[PROTECTED]</code> on every page while Agent Mode is on. Example: a project name, a medication, a family member's name.</p>
+    <p class="muted">One phrase per line. Matching text is replaced with <code>[PROTECTED]</code> on every page while Agent Mode is on. Example: a project name, a medication, a family member's name.<br><b>Tip:</b> on any page, select text, right-click, and choose <b>Hide this from AI agents</b> to add it here.</p>
     <textarea id="keywords" rows="4" spellcheck="false"></textarea>
     <div class="actions"><button id="saveKeywords">Save</button><span class="saved" id="keywordsSaved"></span></div>
   </section>

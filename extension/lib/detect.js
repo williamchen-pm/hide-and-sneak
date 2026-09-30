@@ -148,11 +148,16 @@
   }
 
   /** Build keyword rules from user phrases (case-insensitive, whole-phrase). */
+  // User phrases (typed in Rules, or added with right-click "Hide this"). Word boundaries only
+  // where the phrase starts/ends with a letter or digit, so "$4,213.55" or "(555) 010-2231" match
+  // too, and any run of whitespace in the phrase matches any whitespace on the page.
   function keywordRules(phrases) {
-    return (phrases || []).filter(Boolean).map((p, i) => ({
-      id: 'keyword-' + i, pack: 'keyword', token: '[PROTECTED]', group: 0,
-      re: new RegExp('\\b' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'dgi'),
-    }));
+    return (phrases || []).map(p => String(p || '').trim()).filter(p => p.length >= 2).map((p, i) => {
+      const body = p.split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
+      const pre = /^[\p{L}\p{N}_]/u.test(p) ? '(?<![\\p{L}\\p{N}_])' : '';
+      const post = /[\p{L}\p{N}_]$/u.test(p) ? '(?![\\p{L}\\p{N}_])' : '';
+      return { id: 'keyword-' + i, pack: 'keyword', token: '[PROTECTED]', group: 0, re: new RegExp(pre + body + post, 'dgiu') };
+    });
   }
 
   // ---------- context-aware matching (value and its label live in different elements) ----------

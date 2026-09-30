@@ -79,6 +79,16 @@ Saves the user's settings (Agent Mode on/off, protection packs, protected pages 
 Registers the page script only while Agent Mode is on, and injects it into already-open tabs when the user turns Agent Mode on, so pages don't need to reload and the extension runs nothing while Agent Mode is off.
 ```
 
+`contextMenus` (added in 0.9.1):
+```
+Adds a right-click "Hide this from AI agents" command, so the user can select sensitive text the extension missed and have it hidden from then on, and a "Report something Hide & Sneak missed" link.
+```
+
+`alarms` (added in 0.9.1):
+```
+Powers an optional timer, off by default, that turns Agent Mode off automatically after a time the user chooses.
+```
+
 Host permission (`<all_urls>`):
 ```
 A browser AI agent can work on any website the user sends it to, so protection has to be available on any page. The extension only reads a page to replace sensitive text with placeholders and lock sensitive form fields, entirely on the user's device, and only while Agent Mode is on.

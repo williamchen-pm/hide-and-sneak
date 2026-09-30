@@ -4,6 +4,7 @@ const EFFECT = {
   'redact': 'Text hidden', 'field-locked': 'Field protected', 'field-cleared': 'Field cleared on lock',
   'lock-bypass-cleared': 'Blocked a write to a locked field', 'page-blocked': 'Page blocked', 'miss': 'Rule missed its target',
   'session-start': 'Agent Mode on', 'session-end': 'Agent Mode off',
+  'auto-off': 'Agent Mode turned off automatically', 'word-added': 'Protected word added (right-click)',
 };
 let sortKey = 'ts', sortDir = -1;
 
@@ -49,3 +50,5 @@ $('export').onclick = async () => {
   a.click();
 };
 load();
+// Words added with right-click "Hide this" show up here without a reload.
+chrome.storage.onChanged.addListener((c) => { if (c.settings && document.activeElement !== $('keywords')) $('keywords').value = (c.settings.newValue.keywords || []).join('\n'); });

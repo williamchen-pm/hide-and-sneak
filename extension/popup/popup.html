@@ -15,6 +15,16 @@
   .links { display:flex; justify-content:space-between; font-size: 12px; }
   .beta { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; background: var(--soft); color: var(--muted); }
   .report { display:flex; flex-direction:column; gap:4px; font-size: 12px; }
+  .shortcut { font-size: 11px; margin-top: 2px; }
+  kbd { font: 600 10px/1 ui-monospace, monospace; padding: 2px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--soft); }
+  .turn { margin: -2px 0 12px; padding: 10px; border-radius: 8px; border: 1px dashed #C98A00; }
+  .turn .head { font-size: 13px; font-weight: 700; }
+  .turn ul { list-style: none; margin: 6px 0 0; padding: 0; }
+  .turn li button { all: unset; box-sizing: border-box; width: 100%; display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .turn li button:hover, .turn li button:focus-visible { background: var(--soft); }
+  .turn li button span:last-child { color: var(--muted); font-size: 12px; }
+  .turn li.done button { text-decoration: line-through; color: var(--muted); }
+  select { font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
 </style>
 </head>
 <body>
@@ -22,16 +32,24 @@
     <div>
       <div class="big">Agent Mode</div>
       <div class="muted">Turn on before you hand a task to your AI agent.</div>
+      <div class="muted shortcut" id="shortcut"></div>
     </div>
     <label class="switch"><input type="checkbox" id="agent"><span></span></label>
   </div>
   <div class="status" id="status">Off. The extension isn't touching any page.</div>
+  <div class="turn" id="turn" hidden>
+    <div class="head" id="turnHead"></div>
+    <div class="muted" id="turnNote"></div>
+    <ul id="turnList"></ul>
+  </div>
 
   <div class="muted" style="margin-bottom:4px">Protection packs</div>
   <div class="packs" id="packs"></div>
 
   <hr>
   <label class="row" style="font-size:13px"><span>Highlight hidden items</span><input type="checkbox" id="highlight"></label>
+  <label class="row" style="font-size:13px;margin-top:8px"><span>Turn off automatically</span>
+    <select id="autooff"><option value="0">Never</option><option value="30">After 30 min</option><option value="60">After 1 hour</option><option value="120">After 2 hours</option><option value="240">After 4 hours</option></select></label>
   <hr>
   <label class="row" style="font-size:13px"><span>Skip protection on <b id="host">this site</b></span><input type="checkbox" id="siteoff"></label>
   <hr>

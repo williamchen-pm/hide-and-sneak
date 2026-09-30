@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.1 (beta)
+
+- **Right-click → "Hide this from AI agents."** Select anything Hide & Sneak missed, right-click, and it's hidden right away and on every page from then on. The same menu has "Report something Hide & Sneak missed."
+- **"Your turn" list.** The popup lists the fields your agent couldn't fill, by their real question ("Desired base salary"). When you turn Agent Mode off, those fields are outlined on the page until you fill them in, and clicking one in the popup jumps to it.
+- **Keyboard shortcut:** Alt+Shift+H turns Agent Mode on or off (change it at chrome://extensions/shortcuts).
+- **Optional auto-off timer** (30 minutes to 4 hours). Off by default, because turning protection off in the middle of an agent's task would unlock fields.
+- **Fix:** turning Agent Mode off and back on without reloading now protects already-open tabs again. In 0.9.0 those tabs stayed unprotected until they were reloaded.
+- Protected words now match text that starts or ends with symbols (like `$4,213.55`) and ignore differences in spacing.
+- New permissions: `contextMenus` (the right-click menu) and `alarms` (the auto-off timer). Neither shows an install warning, and neither sends anything anywhere.
+
 ## 0.9.0 (beta)
 
 First public release.
