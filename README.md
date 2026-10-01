@@ -4,7 +4,7 @@
 
 Hide & Sneak is a free, open-source Chrome extension for people who hand everyday tasks to a browser AI agent such as Claude in Chrome: triaging email, filling out job applications, shopping, paying bills. Turn on **Agent Mode** before you delegate. While it's on, sensitive text on the page is replaced with placeholders like `[2FA CODE]`, and form fields you should answer yourself are locked. When Agent Mode is off, the extension does nothing.
 
-**[Download the latest beta](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak.zip)** · [Install steps](#install) · Chrome Web Store version is in review
+**[Add to Chrome from the Chrome Web Store](https://chromewebstore.google.com/detail/hide-sneak/nglcphjdboglekojonbglleceicdlchc)** · [Other install options](#install)
 
 > [!WARNING]
 > **This is a beta.** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
@@ -65,7 +65,9 @@ Hide & Sneak **may miss sensitive info on some sites**, especially unusual page 
 
 ## Install
 
-**Chrome Web Store:** in review. Until it's approved, install the beta directly (about a minute):
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/hide-sneak/nglcphjdboglekojonbglleceicdlchc)** (recommended). Click **Add to Chrome**, then pin Hide & Sneak from the puzzle-piece icon. Store installs update automatically.
+
+**Or install the latest beta from GitHub** (sometimes a version ahead of the store; no automatic updates):
 
 1. Download **[hide-and-sneak.zip](https://github.com/williamchen-pm/hide-and-sneak/releases/latest/download/hide-and-sneak.zip)** from the [latest release](https://github.com/williamchen-pm/hide-and-sneak/releases/latest) and unzip it.
 2. In Chrome, type `chrome://extensions` in the address bar and press **Enter**.
@@ -73,7 +75,7 @@ Hide & Sneak **may miss sensitive info on some sites**, especially unusual page 
 4. Click **Load unpacked** (top-left) and select the unzipped folder (the one that contains `manifest.json`).
 5. Click the **puzzle-piece icon** next to the address bar and **pin** Hide & Sneak.
 
-Chrome may show a "developer mode extensions" notice on startup; that's normal for extensions installed this way. Once the store version is live, remove this copy and install from the store to get automatic updates.
+Chrome may show a "developer mode extensions" notice on startup; that's normal for extensions installed this way. If you installed this way before, remove that copy at `chrome://extensions` and install from the store to get automatic updates.
 
 ## How to use it
 

@@ -1,6 +1,6 @@
 # Install Hide & Sneak (developer mode)
 
-Hide & Sneak isn't on the Chrome Web Store yet. Until it is, load it straight from this folder.
+Most people should install from the [Chrome Web Store](https://chromewebstore.google.com/detail/hide-sneak/nglcphjdboglekojonbglleceicdlchc). To run it from source (for development or testing), load it straight from this folder.
 
 ## Load the extension
 

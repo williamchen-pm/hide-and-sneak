@@ -244,3 +244,4 @@ flowchart LR
 | 2026-09-30 | README rewritten for the public beta (beta warning, may-miss notice, feedback, trust section, screenshots); 2FA context spans one short colon-ended sentence (found while taking README screenshots) |
 | 2026-09-30 | 0.9.1: right-click Hide this / Report, "Your turn" list and outlines, Alt+Shift+H shortcut, opt-in auto-off; fixed re-enabling Agent Mode leaving open tabs unprotected; `tests/e2e/v091.js` (23 checks) |
 | 2026-09-30 | Chrome Web Store kit: `docs/STORE_LISTING.md` (all form text), `privacy.html`, store images in `docs/store/`, `dist/hide-and-sneak-0.9.0.zip` (git-ignored); minimum Chrome 120 |
+| 2026-10-01 | 0.9.0 approved and live on the Chrome Web Store; README install points to the store, GitHub zip kept as the ahead-of-store option |
