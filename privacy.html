@@ -23,6 +23,7 @@
   <li><b>Your settings</b>: Agent Mode on/off, which protection packs are enabled, the auto-off timer, and any protected pages, words, or sites you add. Text you choose with the right-click <b>Hide this from AI agents</b> command is saved as a protected word, the same as typing it into the settings page, so it can be hidden on future pages. You can see and remove these words on the settings page.</li>
   <li><b>An activity log</b> of what <i>kind</i> of item was hidden or protected, on which page (web address without query parameters), and when. For example, "2FA code hidden on mail.google.com/mail/u/0/." It never contains the hidden values themselves. The log keeps at most about 5,000 entries, and you can export or clear it at any time from the extension's settings page.</li>
 </ul>
+<p>While Chrome is open, the extension also keeps two short-lived items in Chrome's session memory (cleared when Chrome closes): which tabs you've unlocked for sign-in and until when, and the last phrase you hid with right-click, so you can undo it. The original targets of disabled login links are kept only in that page's memory, so they can work again when you unlock the page or turn Agent Mode off.</p>
 <p>This information is kept in Chrome's local extension storage on your device. It is not synced or sent anywhere, and it is removed when you uninstall the extension.</p>
 
 <h2>Network access</h2>

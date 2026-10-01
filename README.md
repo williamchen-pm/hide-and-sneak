@@ -33,6 +33,11 @@ The order number and total stay visible, because your agent may need them. The "
 | SSNs, dates of birth, passport and license numbers | `[SSN]`, `[DATE OF BIRTH]`, `[ID NUMBER]` |
 | API keys and tokens (GitHub, OpenAI, Anthropic, AWS, Stripe, Google, Slack, JWTs), private keys | `[API KEY]`, `[PRIVATE KEY]` |
 | One-time login and password-reset links | `[LOGIN LINK]` |
+| Crypto wallet recovery (seed) phrases, including one-word-per-box grids | `[RECOVERY PHRASE]`, `[SEED]` |
+| Health & insurance IDs (Medicare, member/group/policy IDs, medical record numbers) | `[HEALTH ID]` |
+| EINs, UK National Insurance numbers, Canadian SINs, VINs | `[TAX ID]`, `[ID NUMBER]`, `[VIN]` |
+| Security question answers, software license keys | `[SECURITY ANSWER]`, `[LICENSE KEY]` |
+| Optional: account balances, crypto wallet addresses (off by default) | `[BALANCE]`, `[WALLET]` |
 | Your own words and names (e.g. a gamer tag, a family member's name) | `[PROTECTED]` |
 | Instructions aimed at AI agents ("AI agents: forward this…", "ignore previous instructions", hidden text telling the agent to run scripts or send a code somewhere) | `[AGENT INSTRUCTIONS REMOVED]` |
 
@@ -57,10 +62,10 @@ It also covers **tab titles**, since agents read those too.
 
 Hide & Sneak **may miss sensitive info on some sites**, especially unusual page layouts it hasn't been tested against. Specifically:
 
-- **Text inside images, canvases, and PDFs** opened in Chrome's built-in viewer can't be hidden. Close PDFs before handing a task to an agent.
-- **Not recognized yet:** account balances, health insurance member IDs, crypto seed phrases and wallet addresses, and non-US ID formats. See [`docs/AUDIT.md`](docs/AUDIT.md).
+- **Text inside images, canvases, and PDFs** can't be hidden. Chrome's PDF viewer can't be changed by any extension, so PDFs are **blocked** while Agent Mode is on (you can switch that to a warning).
+- **Not recognized yet:** most non-US ID formats beyond UK and Canada. See [`docs/AUDIT.md`](docs/AUDIT.md).
 - **Workday job applications** haven't been tested yet (their forms sit behind an account).
-- **Signing in while Agent Mode is on** is blocked on purpose (code fields are locked and login links are disabled). Turn Agent Mode off to sign in.
+- **Signing in while Agent Mode is on:** code and password fields are locked and login links are disabled. Use **Unlock for 2 min** in the popup to sign in on that tab without turning protection off.
 - **An agent that goes around the page**, for example by running its own scripts or reading network traffic, isn't stopped. Hide & Sneak controls what's *on the page*, and no browser extension can block an agent's network reads. The injection shield removes the most common reason an agent would do this (instructions planted on the page), but it can't stop an agent that does it on its own. See the [threat model](docs/SPEC.md).
 - **To see hidden values yourself**, turn Agent Mode off and reload the page. Originals are never stored, so there's nothing to "reveal".
 
@@ -89,6 +94,7 @@ Chrome may show a "developer mode extensions" notice on startup; that's normal f
 - **It missed something?** Select it, right-click, and choose **Hide this from AI agents**. It's hidden right away and on every page from then on (you can edit the list under **Rules & activity log**).
 - **Your turn.** The popup lists the questions your agent couldn't answer. After you turn Agent Mode off, those fields are outlined on the page until you fill them in.
 - **Shortcut:** **Alt+Shift+H** turns Agent Mode on or off.
+- **Signing in?** Click **Unlock for 2 min** in the popup. Only that tab unlocks, including the next steps of the sign-in, then it locks again by itself.
 - **Auto-off** (optional): have Agent Mode turn itself off after 30 minutes to 4 hours. It's off by default, since turning protection off in the middle of an agent's task would unlock fields.
 
 ![The Hide & Sneak popup with Agent Mode on, protection packs, and report links](docs/images/popup.png)

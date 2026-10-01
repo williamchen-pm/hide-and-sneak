@@ -1,4 +1,4 @@
-# Chrome Web Store submission kit (v0.9.2 beta)
+# Chrome Web Store submission kit (v0.9.3 beta)
 
 Copy each block into the matching field in the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
@@ -31,7 +31,9 @@ If you hand everyday tasks to a browser AI agent, such as triaging email, fillin
 
 It missed something? Select it, right-click, and choose "Hide this from AI agents." When the agent is done, the popup lists the fields left for you to fill in. Shortcut: Alt+Shift+H.
 
-What it recognizes: verification and backup codes, passwords and PINs, card numbers, expiry dates and CVVs, bank account and routing numbers, SSNs and ID numbers, API keys and private keys, and one-time login links. Optional packs cover contact info and the last 4 digits of cards and accounts.
+What it recognizes: verification and backup codes, passwords and PINs, crypto wallet recovery phrases, card numbers, expiry dates and CVVs, bank account and routing numbers, SSNs, tax and ID numbers (including UK and Canada), health insurance IDs, security question answers, API keys, license keys, and one-time login links. Optional packs cover account balances, crypto wallet addresses, contact info, and the last 4 digits of cards and accounts.
+
+Need to sign in while your agent works? "Unlock for 2 min" opens just that tab for sign-in, then locks it again. PDFs can't be redacted by any extension, so they're blocked while Agent Mode is on (or shown with a warning, your choice).
 
 When the agent is done, turn Agent Mode off. Protected fields unlock right away, and nothing the agent filled in is lost.
 
@@ -42,9 +44,8 @@ PRIVACY
 - Free and open source (MIT): https://github.com/williamchen-pm/hide-and-sneak
 
 KNOWN GAPS (BETA)
-- Text inside images and PDFs can't be hidden.
-- Account balances, health insurance IDs, crypto seed phrases, and non-US ID formats aren't recognized yet.
-- Signing in is blocked while Agent Mode is on (code fields are locked), so turn it off to sign in.
+- Text inside images can't be hidden, and PDFs can only be blocked, not redacted.
+- Most non-US ID formats beyond the UK and Canada aren't recognized yet.
 - An agent that goes around the page on its own (for example, running its own scripts or reading network traffic) isn't stopped. The injection shield removes the most common reason an agent would do this.
 
 Works with browser AI agents such as Claude in Chrome. Not affiliated with Anthropic or any AI provider.

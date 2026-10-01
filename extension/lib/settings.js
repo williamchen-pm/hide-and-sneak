@@ -3,11 +3,12 @@
   'use strict';
   const DEFAULTS = {
     agentMode: false,
-    packs: { identity: true, payments: true, credentials: true, contact: false, job: true, last4: false, injection: true },
+    packs: { identity: true, payments: true, credentials: true, health: true, contact: false, job: true, last4: false, crypto: false, balances: false, injection: true },
     pageRules: [],      // URL patterns, e.g. "https://www.amazon.com/cpe/yourpayments/*"
     keywords: [],       // phrases to redact
     siteOff: [],        // hostnames where protection is skipped
     highlight: true,    // paint hidden items as a redaction bar
+    blockPdfs: true,    // PDFs can't be redacted, so block them while Agent Mode is on
     autoOffMinutes: 0,  // 0 = never. Otherwise Agent Mode turns itself off after this long.
   };
   async function getSettings() {

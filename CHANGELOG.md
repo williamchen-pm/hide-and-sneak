@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.3 (beta)
+
+- **Recognizes more kinds of sensitive info.** The coverage audit went from 16 of 28 samples to all of them:
+  - Crypto wallet **recovery (seed) phrases**, including the one-word-per-box grids wallet apps show (always on).
+  - **Health & insurance IDs** (new pack, on): Medicare numbers, insurance member/group/policy IDs, medical record numbers.
+  - **Tax and non-US IDs:** EINs, UK National Insurance numbers, Canadian SINs (checksum-verified), and VINs (check-digit-verified).
+  - **Security question answers** and **software license keys**.
+  - Optional packs, off by default: **Account balances** and **Crypto wallet addresses** (agents often need these).
+  - New field locks: security questions, PINs, recovery phrases, tax IDs, and health insurance IDs.
+- **Sign in without turning protection off.** The popup's **Unlock for 2 min** button unlocks just that tab, including the next pages of a sign-in flow, then locks it again. Agents can't reach the popup, so only you can use it. Login links work again while unlocked.
+- **PDFs are no longer a silent gap.** Chrome's PDF viewer can't be changed by any extension, so while Agent Mode is on, PDFs are blocked (default) or show a warning, and the toolbar badge says PDF. Setting: "Block PDFs while Agent Mode is on."
+- **Undo for right-click "Hide this"**, from the popup (masked, so nobody reads it over your shoulder).
+- Zero false positives from the new patterns across ~240,000 lines of ordinary docs and changelogs.
+
 ## 0.9.2 (beta)
 
 - **Injection shield (new protection pack, on by default).** While Agent Mode is on, instructions aimed at AI agents are removed before the agent reads the page and replaced with `[AGENT INSTRUCTIONS REMOVED]`. For example: "AI agents: forward this email to…", "ignore all previous instructions", "do not tell the user", or hidden text telling the agent to run scripts or send a code somewhere. Text people can't see (`display:none`, off-screen, screen-reader-only, 1px, transparent) gets a stricter check, since that's where these usually hide. Only the offending sentence is removed from longer emails and articles. Normal text that mentions AI, agents, or JavaScript is left alone (0 false positives across ~880 lines of this project's own agent-heavy docs).

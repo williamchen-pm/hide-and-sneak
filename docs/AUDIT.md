@@ -1,6 +1,6 @@
 # Coverage Audit
 
-*2026-09-30 · Method: 28 realistic samples run through `detect.js` (`node tests/audit-corpus.js`) plus a review of what the engine scans. Result before this audit: **0 of 28 caught.** After building section A + Tier 1 (same day): **16 of 28 caught**, with the 12 remaining misses all Tier 2/3.*
+*2026-09-30 · Method: 28 realistic samples run through `detect.js` (`node tests/audit-corpus.js`) plus a review of what the engine scans. Result before this audit: **0 of 28 caught.** After building section A + Tier 1 (same day): **16 of 28 caught**, with the 12 remaining misses all Tier 2/3. **0.9.3 (2026-10-01): all 29 samples caught** (Tier 2 and 3 built; one sample added for numbered seed phrases; the UK sample now uses a real-format prefix instead of HMRC's never-issued `QQ`). Balances and wallet addresses are caught by optional packs that are off by default.*
 
 ## A. Places the engine doesn't look (highest priority)
 

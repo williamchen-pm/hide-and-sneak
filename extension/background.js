@@ -10,6 +10,7 @@ const SCRIPT_ID = 'hns-engine';
 const CONTENT_JS = ['lib/detect.js', 'content/engine.js'];
 const LOG_CAP = 5000;
 const tabCounts = new Map();   // tabId -> { protected, misses }
+const pdfTabs = new Set();     // tabs showing a PDF while Agent Mode is on
 
 async function syncRegistration(on) {
   const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [SCRIPT_ID] });
@@ -38,6 +39,21 @@ async function setBadge(tabId) {
     await chrome.action.setTitle({ ...opts, title: 'Hide & Sneak: Agent Mode off' });
     return;
   }
+  if (tabId != null) {
+    const pauses = await getPauses();
+    if (pauses[tabId]) {
+      await chrome.action.setBadgeBackgroundColor({ tabId, color: '#8a6d00' });
+      await chrome.action.setBadgeText({ tabId, text: 'OPEN' });
+      await chrome.action.setTitle({ tabId, title: 'Hide & Sneak: this tab is unlocked for sign-in.' });
+      return;
+    }
+    if (pdfTabs.has(tabId)) {
+      await chrome.action.setBadgeBackgroundColor({ tabId, color: '#C98A00' });
+      await chrome.action.setBadgeText({ tabId, text: 'PDF' });
+      await chrome.action.setTitle({ tabId, title: s.blockPdfs === false ? 'Hide & Sneak: PDFs can\'t be protected. Your agent can read this one.' : 'Hide & Sneak: this PDF is blocked while Agent Mode is on.' });
+      return;
+    }
+  }
   const c = (tabId != null && tabCounts.get(tabId)) || { protected: 0, misses: 0 };
   await chrome.action.setBadgeBackgroundColor({ ...opts, color: c.misses ? '#C98A00' : '#C62828' });
   await chrome.action.setBadgeText({ ...opts, text: c.protected ? String(Math.min(c.protected, 999)) : 'ON' });
@@ -52,12 +68,32 @@ async function appendLog(entries) {
 
 const AUTO_OFF = 'hns-auto-off';
 
+// ---------- per-tab "unlocked for sign-in" ----------
+// Kept in session storage (memory only, cleared when Chrome closes) so it survives the service
+// worker sleeping. Content scripts can't read session storage; they ask with a message.
+async function getPauses() {
+  const { pauses = {} } = await chrome.storage.session.get('pauses');
+  const now = Date.now(); let changed = false;
+  for (const k of Object.keys(pauses)) if (pauses[k] <= now) { delete pauses[k]; changed = true; }
+  if (changed) await chrome.storage.session.set({ pauses });
+  return pauses;
+}
+async function setPause(tabId, until) {
+  const pauses = await getPauses();
+  if (until) pauses[tabId] = until; else delete pauses[tabId];
+  await chrome.storage.session.set({ pauses });
+}
+// The extension's own pages (popup, settings). Content scripts report the web page's URL here, and
+// web pages can't message the extension at all, so neither can unlock a page or undo a hide.
+const fromOurPage = (sender) => sender.id === chrome.runtime.id && (sender.url || '').startsWith(chrome.runtime.getURL(''));
+
 async function setAgentMode(on, reason) {
   const s = await HNSSettings.getSettings();
   const sessionId = on ? `s-${Date.now()}` : s.sessionId;
   await HNSSettings.setSettings({ agentMode: on, sessionId });
   await appendLog([{ ts: Date.now(), effect: on ? 'session-start' : (reason === 'auto' ? 'auto-off' : 'session-end'), sessionId }]);
   await syncRegistration(on);
+  await chrome.storage.session.set({ pauses: {} });
   await chrome.alarms.clear(AUTO_OFF);
   if (on && s.autoOffMinutes > 0) await chrome.alarms.create(AUTO_OFF, { delayInMinutes: s.autoOffMinutes });
   if (on) { tabCounts.clear(); await injectIntoOpenTabs(); }
@@ -79,6 +115,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ ok: true, on: await setAgentMode(!!msg.on) });
     } else if (msg.type === 'getTabStats') {
       sendResponse(tabCounts.get(msg.tabId) || { protected: 0, misses: 0 });
+    } else if (msg.type === 'pauseState' && sender.tab) {
+      const pauses = await getPauses();
+      sendResponse({ until: pauses[sender.tab.id] || 0 });
+    } else if (msg.type === 'pause' && fromOurPage(sender)) {
+      // Only the popup can unlock a page. Agents can't reach it, and pages can't send this.
+      const until = msg.minutes > 0 ? Date.now() + Math.min(msg.minutes, 15) * 60e3 : 0;
+      await setPause(msg.tabId, until);
+      await chrome.scripting.executeScript({ target: { tabId: msg.tabId, allFrames: true },
+        func: (u) => (u ? globalThis.__hnsPause && globalThis.__hnsPause(u) : globalThis.__hnsResume && globalThis.__hnsResume()), args: [until] }).catch(() => {});
+      await appendLog([{ ts: Date.now(), effect: until ? 'page-unlocked' : 'page-relocked' }]);
+      await setBadge(msg.tabId);
+      sendResponse({ ok: true, until });
+    } else if (msg.type === 'pdf' && sender.tab) {
+      pdfTabs.add(sender.tab.id); await setBadge(sender.tab.id); sendResponse({ ok: true });
+    } else if (msg.type === 'tabInfo') {
+      const pauses = await getPauses();
+      sendResponse({ pausedUntil: pauses[msg.tabId] || 0, pdf: pdfTabs.has(msg.tabId) });
+    } else if (msg.type === 'undoHide' && fromOurPage(sender)) {
+      const { lastHidden } = await chrome.storage.session.get('lastHidden');
+      if (lastHidden) {
+        const s = await HNSSettings.getSettings();
+        await HNSSettings.setSettings({ keywords: s.keywords.filter(k => k !== lastHidden) });
+        await chrome.storage.session.remove('lastHidden');
+        await appendLog([{ ts: Date.now(), effect: 'word-removed' }]);
+      }
+      sendResponse({ ok: !!lastHidden });
     } else if (msg.type === 'getAutoOff') {
       const a = await chrome.alarms.get(AUTO_OFF);
       sendResponse({ at: a ? a.scheduledTime : null });
@@ -136,11 +198,11 @@ async function onMenuClick(info, tab) {
     }
     const s = await HNSSettings.getSettings();
     const exists = s.keywords.some(k => k.toLowerCase() === text.toLowerCase());
-    if (!exists) await HNSSettings.setSettings({ keywords: s.keywords.concat(text) });
+    if (!exists) { await HNSSettings.setSettings({ keywords: s.keywords.concat(text) }); await chrome.storage.session.set({ lastHidden: text }); }
     await appendLog([{ ts: Date.now(), effect: 'word-added', sessionId: s.sessionId }]);
     await toast(tab, info.frameId, s.agentMode
-      ? '🔒 Hidden. Hide & Sneak will hide this on every page while Agent Mode is on.'
-      : '🔒 Saved. Hide & Sneak will hide this on every page whenever Agent Mode is on.');
+      ? '🔒 Hidden. Hide & Sneak will hide this on every page while Agent Mode is on. Mistake? Click the Hide & Sneak icon to undo.'
+      : '🔒 Saved. Hide & Sneak will hide this on every page whenever Agent Mode is on. Mistake? Click the Hide & Sneak icon to undo.');
   } else if (info.menuItemId === 'hns-report') {
     // Only the version and the site's domain, never the page URL or the selected text.
     let host = '';
@@ -163,9 +225,9 @@ chrome.storage.onChanged.addListener(async (changes) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, info) => {
-  if (info.status === 'loading' && info.url) { tabCounts.delete(tabId); setBadge(tabId); }
+  if (info.status === 'loading' && info.url) { tabCounts.delete(tabId); pdfTabs.delete(tabId); setBadge(tabId); }
 });
-chrome.tabs.onRemoved.addListener((tabId) => tabCounts.delete(tabId));
+chrome.tabs.onRemoved.addListener((tabId) => { tabCounts.delete(tabId); pdfTabs.delete(tabId); setPause(tabId, 0); });
 
 async function init() {
   createMenus();

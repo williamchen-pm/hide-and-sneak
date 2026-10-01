@@ -287,3 +287,49 @@ test('injection shield: instructions aimed at AI agents', () => {
   // Off when the pack is off is handled by the engine; the placeholder never re-matches
   assert.equal(hit(D.INJECTION_TOKEN, 'hidden'), false);
 });
+
+test('0.9.3 detection: tax, international, VIN, health, seed phrases, wallets, balances, license keys, security answers', () => {
+  const all = { identity: true, payments: true, credentials: true, health: true, job: true, crypto: true, balances: true };
+  const r = (t, p = all) => D.redactText(t, p).text;
+  // Caught
+  assert.equal(r('EIN: 12-3456789'), 'EIN: [TAX ID]');
+  assert.equal(r('Federal Tax ID number 123456789'), 'Federal Tax ID number [TAX ID]');
+  assert.equal(r('NI number: JG 10 37 52 B'), 'NI number: [ID NUMBER]');
+  assert.equal(r('SIN: 046 454 286'), 'SIN: [ID NUMBER]');
+  assert.equal(r('VIN 1HGCM82633A004352'), 'VIN [VIN]');
+  assert.equal(r('Medicare number: 1EG4-TE5-MK73'), 'Medicare number: [HEALTH ID]');
+  assert.equal(r('Member ID: XJH123456789'), 'Member ID: [HEALTH ID]');
+  assert.equal(r('MRN: 00482913'), 'MRN: [HEALTH ID]');
+  assert.equal(r('abandon ability able about above absent absorb abstract absurd abuse access accident'), '[RECOVERY PHRASE]');
+  assert.equal(r('Your phrase: 1. zoo 2) wrong 3. legal 4. winner 5. thank 6. year 7. wave 8. sausage 9. worth 10. useful 11. legal 12. will'), 'Your phrase: 1. [RECOVERY PHRASE]');
+  assert.equal(r('Send to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e'), 'Send to [WALLET]');
+  assert.equal(r('Available balance: $12,345.67'), 'Available balance: [BALANCE]');
+  assert.equal(r('Product key: VK7JG-NPHTM-C97JM-9MPGT-3V66T'), 'Product key: [LICENSE KEY]');
+  assert.equal(r('Security answer: Maple Street'), 'Security answer: [SECURITY ANSWER]');
+  // Left alone
+  for (const t of [
+    'SIN: 046 454 287',                                   // fails the checksum
+    'VIN 1HGCM82633A004353',                              // fails the check digit
+    'NI number: QQ 12 34 56 C',                           // specimen prefix, never issued
+    'The ability to absorb a shock is about the abstract idea of balance and access.',  // prose: "the", "to", "of" break the run
+    'abandon ability able about above absent absorb abstract absurd abuse access',      // only 11 words
+    'Order 112-1234567-1234567 shipped',
+    'Group #: 12',
+    'Card ending 4242 and gift card 6006-4912-3456-7890',
+    'Tx 0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060',            // a 64-char transaction hash, not a 40-char address
+    'Pay your balance online.',
+  ]) assert.equal(r(t), t, t);
+  // Default packs: wallets and balances stay visible, seed phrases and health IDs are hidden
+  assert.equal(r('Available balance: $12,345.67', {}), 'Available balance: $12,345.67');
+  assert.equal(r('0x742d35Cc6634C0532925a3b844Bc454e4438f44e', {}), '0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
+  assert.equal(r('MRN: 00482913', {}), 'MRN: [HEALTH ID]');
+  // Field locks
+  const f = (label) => (D.classifyField({ type: 'text', labelText: label }) || {}).label || null;
+  assert.equal(f('Security question answer'), 'security question');
+  assert.equal(f("Mother's maiden name"), 'security question');
+  assert.equal(f('PIN'), 'PIN');
+  assert.equal(f('Secret Recovery Phrase'), 'wallet recovery phrase');
+  assert.equal(f('Employer Identification Number (EIN)'), 'SSN or tax ID');
+  assert.equal(f('Member ID'), 'health insurance ID');
+  assert.equal(f('Pinterest profile'), null);
+});

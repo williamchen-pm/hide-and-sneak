@@ -5,6 +5,7 @@ const EFFECT = {
   'lock-bypass-cleared': 'Blocked a write to a locked field', 'page-blocked': 'Page blocked', 'miss': 'Rule missed its target',
   'session-start': 'Agent Mode on', 'session-end': 'Agent Mode off',
   'auto-off': 'Agent Mode turned off automatically', 'word-added': 'Protected word added (right-click)',
+  'word-removed': 'Protected word removed (undo)', 'page-unlocked': 'Page unlocked for sign-in', 'page-relocked': 'Page locked again', 'pdf-blocked': 'PDF blocked', 'pdf-seen': 'PDF opened (not protected)',
 };
 let sortKey = 'ts', sortDir = -1;
 

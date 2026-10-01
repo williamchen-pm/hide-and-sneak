@@ -107,6 +107,7 @@
     if (shieldText(node, parent)) return;
     const r = D.redactText(t, settings.packs, extraRules);
     if (!r.hits.length) {
+      if (redactSeedGrid(node)) return;
       // A bare value on its own (e.g. "826774" under "Or enter this code:"): check preceding text.
       const trimmed = t.trim();
       if (trimmed.length >= 4 && trimmed.length <= 24 && /\d/.test(trimmed)) {
@@ -129,6 +130,41 @@
     node.nodeValue = r.text;
     if (parent.tagName !== 'TITLE') highlightTokens(node, r.hits.map(h => h.token));
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
+  }
+
+  // ---------- seed phrases shown one word per box ----------
+  // Wallet apps show a recovery phrase as a grid of 12/15/18/21/24 numbered boxes, one word each,
+  // so no single text node holds the phrase. Hide the whole grid when the box count is exactly a
+  // phrase length and the area mentions a recovery/seed phrase (so a 12-item menu is left alone).
+  const SEED_WORD_RE = /^(?:\d{1,2}[.):]?\s*)?([A-Za-z]{3,8})$/;
+  const seedGroups = new WeakSet();
+  function seedWord(n) { const x = SEED_WORD_RE.exec(n.nodeValue.trim()); return x && D.isBip39(x[1]) ? x : null; }
+  function redactSeedGrid(node) {
+    if (!settings.packs || settings.packs.credentials === false || !seedWord(node)) return false;
+    for (let a = node.parentElement, i = 0; a && i < 5 && a !== document.body && a !== document.documentElement; a = a.parentElement, i++) {
+      if (seedGroups.has(a)) return false;
+      const nodes = textNodesUnder(a);
+      if (nodes.length > 120) break;
+      const words = nodes.filter(seedWord);
+      if (![12, 15, 18, 21, 24].includes(words.length)) continue;
+      // Wallet grids are numbered 1..N. Numbered: the phrase can be mentioned a little further up.
+      // Unnumbered (could be a menu or tag list): it has to be mentioned right there.
+      const nums = nodes.filter(n => /^\d{1,2}[.):]?$/.test(n.nodeValue.trim())).length + words.filter(n => /^\s*\d/.test(n.nodeValue)).length;
+      const CTX = /recovery|seed|secret|mnemonic|phrase|backup|wallet/;
+      // Ignore our own placeholders: an already-hidden grid reads "[SEED]", which isn't context.
+      const clean = (t) => t.replace(/\[[A-Z0-9 #]+\]/g, ' ').toLowerCase();
+      const near = CTX.test(clean((a.textContent || '') + ' ' + precedingText(a, 120)));
+      const wide = CTX.test(clean(precedingText(a, 300)));
+      if (!(near || (nums >= words.length && wide))) continue;
+      for (const n of words) {
+        n.nodeValue = n.nodeValue.replace(/[A-Za-z]{3,8}(\s*)$/, '[SEED]$1');
+        if (n.parentElement && n.parentElement.tagName !== 'TITLE') highlightTokens(n, ['[SEED]']);
+      }
+      seedGroups.add(a); totalProtected++;
+      log({ effect: 'redact', ruleId: 'seed-grid', pack: 'credentials', token: '[RECOVERY PHRASE]', where: 'text+grid' });
+      return true;
+    }
+    return false;
   }
 
   // ---------- injection shield ----------
@@ -299,6 +335,13 @@
     return out.slice(-max);
   }
 
+  // Original targets of neutralized login links, kept only in this page's memory (never written
+  // to storage) so they work again when the user unlocks the page or turns Agent Mode off.
+  const linkOriginals = new Map();
+  function restoreLinks() {
+    for (const [el, h] of linkOriginals) if (el.isConnected && el.getAttribute('href') === LINK_PLACEHOLDER) el.setAttribute('href', h);
+    linkOriginals.clear();
+  }
   function redactAttrs(el) {
     if (isOurs(el)) return;
     // Links: one-time login / reset links carry account access in the URL itself. Neutralize the
@@ -308,6 +351,7 @@
       if (h && h !== LINK_PLACEHOLDER) {
         const r = D.redactText(h, settings.packs, extraRules);
         if (r.hits.length) {
+          linkOriginals.set(el, h);
           el.setAttribute('href', LINK_PLACEHOLDER);
           for (const hit of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: hit.ruleId, pack: hit.pack, token: hit.token, where: 'attr:href' }); }
         }
@@ -668,7 +712,7 @@
     return true;
   };
 
-  function unlockAll() {
+  function unlockAll(withTodo = true) {
     const entries = lockedEntries();
     for (const [el, st] of locked) {
       el.readOnly = st.prev.readOnly; el.disabled = st.prev.disabled;
@@ -679,9 +723,57 @@
     }
     locked.clear();
     groupMarkers.clear();
-    startTodo(entries);
+    restoreLinks();
+    if (withTodo) startTodo(entries);
     return entries.length;
   }
+
+  // ---------- unlock this page for a few minutes (to sign in) ----------
+  // Started only from the popup, which agents can't reach. Applies to this tab, including pages
+  // it navigates to during a sign-in flow, until the time runs out.
+  let pausedUntil = 0, resumeTimer = null, pauseBanner = null;
+  function showPauseBanner() {
+    if (window.top !== window) return;
+    const put = () => {
+      if (!pausedUntil) return;
+      if (!pauseBanner || !pauseBanner.isConnected) {
+        pauseBanner = document.createElement('div');
+        pauseBanner.setAttribute(HNS_ATTR, 'banner'); pauseBanner.setAttribute('role', 'status');
+        pauseBanner.style.cssText = 'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:2147483647;font:600 12px/1.3 system-ui,sans-serif;padding:6px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.2);pointer-events:none;background:#fff3cd;color:#664d03;';
+        document.documentElement.appendChild(pauseBanner);
+      }
+      pauseBanner.textContent = '🔓 Hide & Sneak: unlocked for sign-in until ' + new Date(pausedUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '. Your agent can see this page.';
+    };
+    if (document.body) put(); else document.addEventListener('DOMContentLoaded', put, { once: true });
+  }
+  function endPause() {
+    clearTimeout(resumeTimer); resumeTimer = null; pausedUntil = 0;
+    if (pauseBanner) { pauseBanner.remove(); pauseBanner = null; }
+  }
+  function resumeFromPause() {
+    if (!pausedUntil) return;
+    endPause();
+    if (settings && settings.agentMode && !active) activate(document.readyState !== 'loading');
+  }
+  function startPause(until) {
+    pausedUntil = until;
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(resumeFromPause, Math.max(0, until - Date.now()));
+    showPauseBanner();
+  }
+  // Called through chrome.scripting from the popup (same isolated world; pages can't see these).
+  globalThis.__hnsPause = (until) => {
+    if (!active || !(until > Date.now())) return false;
+    active = false;
+    if (observer) observer.disconnect();
+    unlockAll(false);
+    revealPage();
+    if (banner) { banner.remove(); banner = null; }
+    startPause(until);
+    return true;
+  };
+  globalThis.__hnsResume = () => { resumeFromPause(); return true; };
+  globalThis.__hnsPausedUntil = () => (pausedUntil > Date.now() ? pausedUntil : 0);
 
   // ---------- 4. protected pages ----------
   function pageProtected(url) { return (settings.pageRules || []).some(p => D.urlMatches(p, url)); }
@@ -773,6 +865,23 @@
     sessionId = settings.sessionId || null;
     if (!settings.agentMode || (settings.siteOff || []).includes(location.hostname)) { revealPage(); active = false; return; }
     extraRules = D.keywordRules(settings.keywords);
+    // PDFs open in Chrome's built-in viewer, which no extension can rewrite. Block them (default)
+    // or at least warn, instead of leaving them silently readable.
+    if (document.contentType === 'application/pdf') {
+      try { chrome.runtime.sendMessage({ type: 'pdf' }); } catch (_) {}
+      if (settings.blockPdfs !== false) {
+        log({ effect: 'pdf-blocked' }); totalProtected++; flush();
+        showBlockedPage('This PDF is hidden from your AI agent. Hide & Sneak can\'t hide text inside PDFs, so they\'re blocked while Agent Mode is on. To view it, turn off Agent Mode, or turn off “Block PDFs” in the Hide & Sneak menu.');
+      } else {
+        log({ effect: 'pdf-seen' }); flush(); revealPage(); active = false;
+        const warn = () => updateBanner('⚠️ Hide & Sneak can\'t protect PDFs. Your agent can read everything in this one.');
+        if (document.body) warn(); else document.addEventListener('DOMContentLoaded', warn, { once: true });
+      }
+      return;
+    }
+    let until = 0;
+    try { const r = await chrome.runtime.sendMessage({ type: 'pauseState' }); until = (r && r.until) || 0; } catch (_) {}
+    if (until > Date.now()) { revealPage(); active = false; startPause(until); return; }
     if (pageProtected(location.href)) {
       log({ effect: 'page-blocked' }); totalProtected++; flush();
       const block = () => showBlockedPage('This page is off-limits to your AI agent while Agent Mode is on. Turn off Agent Mode to view it.');
@@ -804,6 +913,7 @@
   chrome.storage.onChanged.addListener((changes) => {
     if (!changes.settings) return;
     const next = changes.settings.newValue || {};
+    if (!next.agentMode && pausedUntil) endPause();
     if (active && !next.agentMode) {
       active = false;
       if (observer) observer.disconnect();
@@ -811,7 +921,9 @@
       revealPage();
       updateBanner(n ? `Agent Mode off: ${n} field${n === 1 ? ' is' : 's are'} waiting for you (outlined). Reload to see hidden text.`
                      : 'Agent Mode off: fields unlocked. Reload the page to see hidden text.');
-    } else if (!active && next.agentMode && settings && !(next.siteOff || []).includes(location.hostname)) {
+    } else if (!active && next.agentMode && settings && !(next.siteOff || []).includes(location.hostname) &&
+               !(pausedUntil && (changes.settings.oldValue || {}).agentMode)) {
+      if (pausedUntil) endPause();
       // Turned back on without a reload: protect this tab again.
       settings = Object.assign({ packs: {}, pageRules: [], keywords: [], siteOff: [] }, next);
       sessionId = next.sessionId || sessionId;

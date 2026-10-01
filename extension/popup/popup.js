@@ -1,11 +1,14 @@
 const PACKS = [
   ['injection', 'Hidden instructions aimed at AI agents'],
-  ['identity', 'Identity (SSN, date of birth, ID numbers)'],
+  ['identity', 'Identity (SSN, date of birth, ID and tax numbers)'],
   ['payments', 'Payments (cards, bank accounts)'],
-  ['credentials', 'Passwords & 2FA codes'],
+  ['credentials', 'Passwords, 2FA codes & recovery phrases'],
+  ['health', 'Health & insurance IDs'],
   ['job', 'Job applications (salary, demographics)'],
   ['contact', 'Contact info (phone, address)'],
   ['last4', 'Last 4 digits of cards & accounts'],
+  ['balances', 'Account balances'],
+  ['crypto', 'Crypto wallet addresses'],
 ];
 const $ = (id) => document.getElementById(id);
 
@@ -40,6 +43,9 @@ async function render() {
     cb.onchange = async () => { const cur = await HNSSettings.getSettings(); cur.packs[key] = cb.checked; await HNSSettings.setSettings({ packs: cur.packs }); };
     $('packs').appendChild(l);
   }
+  $('blockPdfs').checked = s.blockPdfs !== false;
+  $('blockPdfs').onchange = async () => { await HNSSettings.setSettings({ blockPdfs: $('blockPdfs').checked }); };
+  await renderTabTools(tab, s);
   $('autooff').value = String(s.autoOffMinutes || 0);
   $('autooff').onchange = async () => { await HNSSettings.setSettings({ autoOffMinutes: Number($('autooff').value) }); render(); };
   await renderTurn(tab);
@@ -51,6 +57,41 @@ async function render() {
     $('siteoff').checked ? set.add(host) : set.delete(host);
     await HNSSettings.setSettings({ siteOff: [...set] });
   };
+}
+
+// Unlock for sign-in, PDF notice, and undo for right-click "Hide this". These live in the popup on
+// purpose: an agent can click things on the page, but it can't reach the extension's popup.
+async function renderTabTools(tab, s) {
+  const web = tab && /^https?:/.test(tab.url || '');
+  const info = (s.agentMode && web) ? await chrome.runtime.sendMessage({ type: 'tabInfo', tabId: tab.id }) : { pausedUntil: 0, pdf: false };
+  const row = $('unlockRow');
+  row.hidden = !(s.agentMode && web) || info.pdf;
+  if (info.pausedUntil) {
+    $('unlockText').textContent = `🔓 Unlocked until ${new Date(info.pausedUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    $('unlockBtn').textContent = 'Lock now';
+    $('unlockBtn').onclick = async () => { await chrome.runtime.sendMessage({ type: 'pause', tabId: tab.id, minutes: 0 }); render(); };
+  } else {
+    $('unlockText').textContent = 'Need to sign in here?';
+    $('unlockBtn').textContent = '🔓 Unlock for 2 min';
+    $('unlockBtn').title = 'Unlocks this tab (and pages it goes to) for 2 minutes so you can sign in. Your agent can see this tab while it is unlocked.';
+    $('unlockBtn').onclick = async () => { await chrome.runtime.sendMessage({ type: 'pause', tabId: tab.id, minutes: 2 }); render(); };
+  }
+  const pdf = $('pdfNote');
+  pdf.hidden = !info.pdf;
+  if (info.pdf) pdf.textContent = s.blockPdfs !== false
+    ? 'This tab is a PDF. Hide & Sneak can\'t hide text inside PDFs, so it\'s blocked while Agent Mode is on.'
+    : '⚠️ This tab is a PDF. Hide & Sneak can\'t hide text inside PDFs, so your agent can read all of it.';
+  const { lastHidden } = await chrome.storage.session.get('lastHidden');
+  $('undoRow').hidden = !lastHidden;
+  if (lastHidden) {
+    // Masked, in case someone is looking over your shoulder.
+    $('undoText').textContent = `Hidden with right-click: “${lastHidden.slice(0, 2)}${'•'.repeat(Math.min(Math.max(lastHidden.length - 2, 1), 10))}”.`;
+    $('undoBtn').onclick = async (e) => {
+      e.preventDefault();
+      await chrome.runtime.sendMessage({ type: 'undoHide' });
+      $('undoRow').textContent = s.agentMode ? 'Undone. Turn off Agent Mode and reload the page to see it again.' : 'Undone.';
+    };
+  }
 }
 
 // "Your turn": the fields Hide & Sneak kept from the agent, so the user knows what's left to fill in.

@@ -24,6 +24,10 @@
   .turn li button:hover, .turn li button:focus-visible { background: var(--soft); }
   .turn li button span:last-child { color: var(--muted); font-size: 12px; }
   .turn li.done button { text-decoration: line-through; color: var(--muted); }
+  .unlock { display:flex; align-items:center; justify-content:space-between; gap:8px; margin: -4px 0 12px; font-size: 12px; }
+  .unlock button { padding: 4px 10px; font-size: 12px; }
+  .note { margin: -4px 0 12px; padding: 8px 10px; border-radius: 8px; background: var(--soft); font-size: 12px; }
+  .note.warn { background: #fff3cd; color: #664d03; }
   select { font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
 </style>
 </head>
@@ -37,6 +41,9 @@
     <label class="switch"><input type="checkbox" id="agent"><span></span></label>
   </div>
   <div class="status" id="status">Off. The extension isn't touching any page.</div>
+  <div class="unlock" id="unlockRow" hidden><span class="muted" id="unlockText">Need to sign in here?</span><button class="secondary" id="unlockBtn">🔓 Unlock for 2 min</button></div>
+  <div class="note warn" id="pdfNote" hidden></div>
+  <div class="note" id="undoRow" hidden><span id="undoText"></span> <a href="#" id="undoBtn">Undo</a></div>
   <div class="turn" id="turn" hidden>
     <div class="head" id="turnHead"></div>
     <div class="muted" id="turnNote"></div>
@@ -48,6 +55,7 @@
 
   <hr>
   <label class="row" style="font-size:13px"><span>Highlight hidden items</span><input type="checkbox" id="highlight"></label>
+  <label class="row" style="font-size:13px;margin-top:8px"><span>Block PDFs while Agent Mode is on</span><input type="checkbox" id="blockPdfs"></label>
   <label class="row" style="font-size:13px;margin-top:8px"><span>Turn off automatically</span>
     <select id="autooff"><option value="0">Never</option><option value="30">After 30 min</option><option value="60">After 1 hour</option><option value="120">After 2 hours</option><option value="240">After 4 hours</option></select></label>
   <hr>

@@ -20,16 +20,17 @@ const S = [
  ['Financial','EIN','EIN: 12-3456789'],
  ['Financial','Gift card code + PIN','Gift card code: 6006-4912-3456-7890 PIN: 1234'],
  ['Financial','Crypto seed phrase','abandon ability able about above absent absorb abstract absurd abuse access accident'],
+ ['Financial','Seed phrase, numbered','1. abandon 2. ability 3. able 4. about 5. above 6. absent 7. absorb 8. abstract 9. absurd 10. abuse 11. access 12. accident'],
  ['Financial','Crypto wallet (ETH)','0x742d35Cc6634C0532925a3b844Bc454e4438f44e'],
  ['Identity','Medicare MBI','Medicare number: 1EG4-TE5-MK73'],
  ['Identity','Health insurance member ID','Member ID: XJH123456789'],
  ['Identity','Medical record number','MRN: 00482913'],
- ['Identity','UK National Insurance','NI number: QQ 12 34 56 C'],
+ ['Identity','UK National Insurance','NI number: JG 10 37 52 B'],   // QQ is HMRC's specimen prefix, never issued
  ['Identity','Canada SIN','SIN: 046 454 286'],
  ['Identity','VIN','VIN 1HGCM82633A004352'],
  ['Contact','Email address','jordan.rivera@example.com'],
  ['Other','Software license key','Product key: VK7JG-NPHTM-C97JM-9MPGT-3V66T'],
  ['Other','Security answer','Security answer: Maple Street'],
 ];
-const P = { identity:true, payments:true, credentials:true, contact:true, job:true };
+const P = { identity:true, payments:true, credentials:true, health:true, contact:true, job:true, crypto:true, balances:true };  // every pack on: this measures what can be caught
 for (const [cat, name, t] of S) { const r = D.redactText(t, P); console.log((r.hits.length ? 'CAUGHT ' : 'MISSED ') + cat.padEnd(11) + name.padEnd(28) + ' -> ' + r.text); }
