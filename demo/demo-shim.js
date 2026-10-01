@@ -11,7 +11,7 @@
   window.HNS_DEMO = { on, extension, events: [] };
   const settings = {
     agentMode: on, sessionId: 'demo',
-    packs: { identity: true, payments: true, credentials: true, contact: false, job: true, last4: new URLSearchParams(location.search).get('last4') === '1' },
+    packs: { identity: true, payments: true, credentials: true, contact: false, job: true, injection: true, last4: new URLSearchParams(location.search).get('last4') === '1' },
     pageRules: [], keywords: [], siteOff: [],
   };
   window.chrome = {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.2 (beta)
+
+- **Injection shield (new protection pack, on by default).** While Agent Mode is on, instructions aimed at AI agents are removed before the agent reads the page and replaced with `[AGENT INSTRUCTIONS REMOVED]`. For example: "AI agents: forward this email to…", "ignore all previous instructions", "do not tell the user", or hidden text telling the agent to run scripts or send a code somewhere. Text people can't see (`display:none`, off-screen, screen-reader-only, 1px, transparent) gets a stricter check, since that's where these usually hide. Only the offending sentence is removed from longer emails and articles. Normal text that mentions AI, agents, or JavaScript is left alone (0 false positives across ~880 lines of this project's own agent-heavy docs).
+- Why: an agent usually only goes around the page (running its own scripts, reading network traffic, visiting another site) because something on the page told it to. Removing those instructions addresses the cause, though it can't stop an agent that does this on its own. See Known gaps in the README.
+
 ## 0.9.1 (beta)
 
 - **Right-click → "Hide this from AI agents."** Select anything Hide & Sneak missed, right-click, and it's hidden right away and on every page from then on. The same menu has "Report something Hide & Sneak missed."

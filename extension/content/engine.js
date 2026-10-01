@@ -104,6 +104,7 @@
     }
     const parent = node.parentElement;
     if (!parent || SKIP_TAGS.has(parent.tagName) || isOurs(parent)) return;
+    if (shieldText(node, parent)) return;
     const r = D.redactText(t, settings.packs, extraRules);
     if (!r.hits.length) {
       // A bare value on its own (e.g. "826774" under "Or enter this code:"): check preceding text.
@@ -128,6 +129,97 @@
     node.nodeValue = r.text;
     if (parent.tagName !== 'TITLE') highlightTokens(node, r.hits.map(h => h.token));
     for (const h of r.hits) { totalProtected++; log({ effect: 'redact', ruleId: h.ruleId, pack: h.pack, token: h.token, where: 'text' }); }
+  }
+
+  // ---------- injection shield ----------
+  // Removes instructions aimed at AI agents ("ignore previous instructions", "AI agents: forward
+  // this...", hidden text telling the agent to run scripts) before the agent reads the page.
+  // Stricter checks apply to text people can't see, which is where these usually hide.
+  const INJ_TOKEN = D.INJECTION_TOKEN;
+  function hiddenFromPeople(el) {
+    // While the page is still covered by our own load-time cover (html{visibility:hidden}), every
+    // element computes as hidden. Lift the cover just for this check: it's synchronous, so
+    // nothing is painted or read in between.
+    const cover = document.getElementById(HIDE_ID);
+    if (cover) cover.disabled = true;
+    try { return hiddenAncestor(el); } finally { if (cover) cover.disabled = false; }
+  }
+  function hiddenAncestor(el) {
+    for (let a = el, i = 0; a && a.nodeType === 1 && a !== document.documentElement && i < 8; a = a.parentElement, i++) {
+      const cs = getComputedStyle(a);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.visibility === 'collapse') return a;
+      if (parseFloat(cs.opacity) < 0.05 || parseFloat(cs.fontSize) < 3) return a;
+      if (/^rgba\([^)]*,\s*0\)$|^transparent$/.test(cs.color)) return a;
+      if (parseFloat(cs.textIndent) < -500) return a;
+      if (cs.clipPath && /inset\(\s*(?:50|100)%/.test(cs.clipPath)) return a;
+      if (cs.clip && /rect\(\s*0(?:px)?[ ,]+0(?:px)?[ ,]+0(?:px)?[ ,]+0(?:px)?\s*\)/.test(cs.clip)) return a;
+      if (cs.position === 'absolute' || cs.position === 'fixed') {
+        const r = a.getBoundingClientRect();
+        if (r.right < -100 || r.bottom < -100 || r.left > innerWidth + 2000 || (r.width <= 1 && r.height <= 1)) return a;
+      }
+    }
+    return null;
+  }
+  function shieldText(node, parent) {
+    if (!settings.packs || settings.packs.injection === false) return false;
+    const t = node.nodeValue;
+    if (!D.injectionQuick(t)) return false;
+    let m = D.injectionMatch(t, 'text'), hiddenEl = null;
+    if (!m && parent.tagName !== 'TITLE') { hiddenEl = hiddenFromPeople(parent); if (hiddenEl) m = D.injectionMatch(t, 'hidden'); }
+    if (!m) return false;
+    // Take the whole short block (so an instruction split across <b>/<span> goes too); in long
+    // blocks, only the sentence.
+    let block = hiddenEl || parent;
+    if (!hiddenEl) for (let i = 0; i < 3 && block.parentElement && block.parentElement !== document.body && /^inline/.test(getComputedStyle(block).display); i++) block = block.parentElement;
+    const visible = !hiddenEl && parent.tagName !== 'TITLE';
+    if (wholeBlock(block, hiddenEl)) wipeBlock(block, visible);
+    else {
+      node.nodeValue = D.redactInjection(t, m);
+      if (visible) highlightTokens(node, [INJ_TOKEN]);
+    }
+    totalProtected++;
+    log({ effect: 'redact', ruleId: 'injection', pack: 'injection', token: INJ_TOKEN, where: hiddenEl ? 'hidden-text' : 'text' });
+    return true;
+  }
+
+  // Remove the whole block when the instruction is most of it (or it's hidden and short);
+  // otherwise only the sentence, so the rest of an email or article stays readable.
+  function wholeBlock(block, hiddenEl) {
+    if (block === document.body || block.tagName === 'TITLE') return false;
+    const bt = (block.textContent || '').replace(/\s+/g, ' ').trim();
+    if (bt.length > 2000) return false;
+    if (hiddenEl) return true;
+    const m = D.injectionMatch(bt, 'text');
+    if (!m) return false;
+    return D.redactInjection(bt, m).replace(INJ_TOKEN, '').trim().length < 40;
+  }
+  function wipeBlock(block, visible) {
+    let first = true;
+    for (const n of textNodesUnder(block)) {
+      if (first) { n.nodeValue = INJ_TOKEN; first = false; if (visible) highlightTokens(n, [INJ_TOKEN]); }
+      else n.nodeValue = '';
+    }
+    block.setAttribute('data-hns-inj', '');
+  }
+  // An instruction split across inline tags ("Please <b>ignore all previous</b> <i>instructions</i>")
+  // doesn't match any single text node. Check the smallest blocks whose combined text matches.
+  const BLOCK_SEL = 'p, li, td, th, dd, dt, blockquote, h1, h2, h3, h4, h5, h6, div, section, article, span, label, figcaption, summary';
+  function shieldBlocks(root) {
+    if (!settings.packs || settings.packs.injection === false || !root || root.nodeType !== 1 || isOurs(root)) return;
+    const rt = root.textContent || '';
+    if (!D.injectionQuick(rt) || !D.injectionMatch(rt.replace(/\s+/g, ' '), 'text')) return;
+    const cands = [root, ...root.querySelectorAll(BLOCK_SEL)].filter(e => !isOurs(e) && !SKIP_TAGS.has(e.tagName) &&
+      D.injectionMatch((e.textContent || '').replace(/\s+/g, ' '), 'text'));
+    const deepest = cands.filter(e => !cands.some(o => o !== e && e.contains(o)));
+    for (const b of deepest) {
+      const bt = (b.textContent || '').replace(/\s+/g, ' ').trim();
+      const m = D.injectionMatch(bt, 'text');
+      if (!m || b === document.body) continue;
+      if (D.redactInjection(bt, m).replace(INJ_TOKEN, '').trim().length < 40 || bt.length <= 300) wipeBlock(b, true);
+      else continue;   // long block with a split instruction: leave it (rare; logged as a gap)
+      totalProtected++;
+      log({ effect: 'redact', ruleId: 'injection', pack: 'injection', token: INJ_TOKEN, where: 'text+block' });
+    }
   }
 
   // The label that belongs to a value in table / grid / definition-list layouts, where the label
@@ -224,6 +316,11 @@
     for (const a of REDACT_ATTRS) {
       const v = el.getAttribute && el.getAttribute(a);
       if (!v) continue;
+      if (settings.packs && settings.packs.injection !== false && v !== INJ_TOKEN && D.injectionMatch(v, 'attr')) {
+        el.setAttribute(a, INJ_TOKEN); totalProtected++;
+        log({ effect: 'redact', ruleId: 'injection', pack: 'injection', token: INJ_TOKEN, where: 'attr:' + a });
+        continue;
+      }
       const r = D.redactText(v, settings.packs, extraRules);
       if (r.hits.length) {
         el.setAttribute(a, r.text);
@@ -238,7 +335,7 @@
 
   function processTree(root) {
     if (!root) return;
-    if (root.nodeType === Node.TEXT_NODE) { redactTextNode(root); return; }
+    if (root.nodeType === Node.TEXT_NODE) { redactTextNode(root); const pe = root.parentElement; if (pe) shieldBlocks(pe.closest(BLOCK_SEL)); return; }
     if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
     if (root.nodeType === Node.ELEMENT_NODE) {
       if (SKIP_TAGS.has(root.tagName) && root.tagName !== 'TEXTAREA') return;
@@ -255,6 +352,7 @@
       }
     });
     let n = walker.currentNode;
+    const blockRoot = root.nodeType === Node.ELEMENT_NODE ? root : null;
     while (n) {
       if (n.nodeType === Node.TEXT_NODE) redactTextNode(n);
       else {
@@ -265,6 +363,7 @@
       }
       n = walker.nextNode();
     }
+    if (blockRoot) shieldBlocks(blockRoot);
   }
 
   // ---------- 3. field locks ----------

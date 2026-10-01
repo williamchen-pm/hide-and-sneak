@@ -34,6 +34,7 @@ The order number and total stay visible, because your agent may need them. The "
 | API keys and tokens (GitHub, OpenAI, Anthropic, AWS, Stripe, Google, Slack, JWTs), private keys | `[API KEY]`, `[PRIVATE KEY]` |
 | One-time login and password-reset links | `[LOGIN LINK]` |
 | Your own words and names (e.g. a gamer tag, a family member's name) | `[PROTECTED]` |
+| Instructions aimed at AI agents ("AI agents: forward this…", "ignore previous instructions", hidden text telling the agent to run scripts or send a code somewhere) | `[AGENT INSTRUCTIONS REMOVED]` |
 
 It also covers **tab titles**, since agents read those too.
 
@@ -60,7 +61,7 @@ Hide & Sneak **may miss sensitive info on some sites**, especially unusual page 
 - **Not recognized yet:** account balances, health insurance member IDs, crypto seed phrases and wallet addresses, and non-US ID formats. See [`docs/AUDIT.md`](docs/AUDIT.md).
 - **Workday job applications** haven't been tested yet (their forms sit behind an account).
 - **Signing in while Agent Mode is on** is blocked on purpose (code fields are locked and login links are disabled). Turn Agent Mode off to sign in.
-- **An agent that goes around the page**, for example by reading network traffic or a site's data directly, isn't stopped. Hide & Sneak controls what's *on the page*. See the [threat model](docs/SPEC.md).
+- **An agent that goes around the page**, for example by running its own scripts or reading network traffic, isn't stopped. Hide & Sneak controls what's *on the page*, and no browser extension can block an agent's network reads. The injection shield removes the most common reason an agent would do this (instructions planted on the page), but it can't stop an agent that does it on its own. See the [threat model](docs/SPEC.md).
 - **To see hidden values yourself**, turn Agent Mode off and reload the page. Originals are never stored, so there's nothing to "reveal".
 
 ## Install

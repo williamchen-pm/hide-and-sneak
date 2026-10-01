@@ -102,7 +102,7 @@
 
   const PLACEHOLDER_RE = /^\s*(?:\[[A-Z0-9 #]+\]\s*)+$/;
 
-  const DEFAULT_PACKS = { identity: true, payments: true, credentials: true, contact: false, job: true, last4: false };
+  const DEFAULT_PACKS = { identity: true, payments: true, credentials: true, contact: false, job: true, last4: false, injection: true };
 
   function enabledRules(packs, extraRules) {
     const p = Object.assign({}, DEFAULT_PACKS, packs || {});
@@ -267,7 +267,57 @@
     return new RegExp('^' + esc + '$', 'i').test(url);
   }
 
-  const api = { luhnValid, abaValid, findMatches, redactText, contextMatch, keywordRules, classifyField, urlMatches, RULES, DEFAULT_PACKS };
+  // ---------- injection shield: instructions aimed at AI agents ----------
+  // The usual reason an agent would "go around the page" (run its own scripts, read network
+  // traffic, open another site) is that the page told it to. Text like that is removed before
+  // the agent reads it. Strong patterns apply anywhere; weaker ones only to text a person can't
+  // see (display:none, off-screen, 1px, transparent) or to attributes.
+  const INJECTION_TOKEN = '[AGENT INSTRUCTIONS REMOVED]';
+  const AI = '(?:ai|a\\.i\\.|llms?|(?:large )?language models?|ai (?:assistant|agent|model|system)s?|(?:browser|automated|autonomous|web) agents?|claude|chatgpt|gpt-?\\d[\\w.-]*|gemini|copilot)';
+  const INJ_STRONG = [
+    /\b(?:ignore|disregard|forget|override|bypass)\s+(?:all\s+|any\s+|the\s+|of\s+)*(?:your\s+|my\s+|these\s+|those\s+)?(?:previous|prior|above|earlier|preceding|original|system|existing)\s+(?:instructions?|prompts?|directions|directives|rules|guidelines|messages?|context)/i,
+    new RegExp('\\b(?:attention|note|message|instructions?|notice|reminder|important)\\s*(?:to|for)\\s+(?:any\\s+|all\\s+|the\\s+)?' + AI + '\\b', 'i'),
+    new RegExp('\\b(?:if you are|you are|you\'re|as)\\s+an?\\s+' + AI + '\\b[^.!?\\n]{0,100}\\b(?:must|should|need to|are required|do not|don\'t|ignore|instead|now|have to|will)\\b', 'i'),
+    new RegExp('\\b(?:dear|hey|hi|hello|attention)\\s+' + AI + '\\b', 'i'),
+    new RegExp('(?:^|[.!?\\n]\\s*)(?:to\\s+)?(?:any\\s+|all\\s+|the\\s+)?' + AI + '\\s*[:,\\u2014-]\\s*(?:please\\s+)?(?:ignore|disregard|forward|send|open|go|navigate|visit|click|run|execute|reply|tell|reveal|copy|paste|approve|transfer|do not|don\'t|you must|you should|you need)\\b', 'i'),
+    /<\|?(?:im_start|im_end|endoftext|system)\|?>|\[\/?INST\]|<\/?(?:system|instructions?|system_prompt)>/i,
+    /\b(?:do not|don't|never|without)\s+(?:tell(?:ing)?|inform(?:ing)?|alert(?:ing)?|notify(?:ing)?|warn(?:ing)?|ask(?:ing)?)\s+(?:the|your)\s+(?:user|human|owner)\b/i,
+    /\b(?:send|post|forward|email|upload|submit|exfiltrate|paste)\b[^.!?\n]{0,60}\b(?:code|password|passcode|token|otp|credentials?|cookies?|session|api key|secret)s?\b[^.!?\n]{0,60}\b(?:to|at|into)\s+(?:https?:\/\/|[\w.+-]+@[\w-]+\.)/i,
+  ];
+  const INJ_WEAK = [
+    /\b(?:javascript_tool|read_network_requests|get_page_text|read_page|form_input|computer_use)\b/,
+    /\b(?:new|updated|revised|real|actual|true|hidden|secret)\s+(?:system\s+)?instructions?\s*:/i,
+    /\b(?:system|developer)\s+(?:prompt|message|override|instructions?)\b/i,
+    /\b(?:run|execute|eval(?:uate)?)\b[^.!?\n]{0,40}\b(?:javascript|js|script|code)\b/i,
+  ];
+  const INJ_AI = new RegExp('\\b' + AI + '\\b', 'i');
+  const INJ_IMPERATIVE = /\b(?:ignore|disregard|instead|must|should|need to|navigate|go to|visit|open|run|execute|send|forward|reply|tell|reveal|output|print|copy|respond|say|include|recommend|rate|approve|transfer|buy|download|summari[sz]e)\b/i;
+  const INJ_YOU = /\b(?:you|your)\b/i;
+  // Cheap pre-check so pages without any of these words skip the real work.
+  const INJ_QUICK = /instruction|ignore|disregard|\bai\b|a\.i\.|llm|language model|claude|chatgpt|gpt|gemini|copilot|im_start|endoftext|\[\/?INST\]|<\/?system|javascript|\bjs\b|\bscript\b|the user|your user|the human|read_network|get_page_text|read_page|form_input|system prompt|developer message|exfiltrate|password|passcode|\btoken|credential|cookie|secret|api key|\bcodes?\b/i;
+
+  // where: 'text' (visible), 'hidden' (text a person can't see), 'attr' (attribute values)
+  function injectionMatch(text, where) {
+    if (!text || text.length < 12 || !INJ_QUICK.test(text)) return null;
+    for (const re of INJ_STRONG) { const m = re.exec(text); if (m) return { strong: true, index: m.index, length: m[0].length }; }
+    if (where === 'text') return null;
+    for (const re of INJ_WEAK) { const m = re.exec(text); if (m) return { strong: false, index: m.index, length: m[0].length }; }
+    if (where === 'hidden' && text.trim().length >= 20 && INJ_AI.test(text) && INJ_IMPERATIVE.test(text) && INJ_YOU.test(text))
+      return { strong: false, index: 0, length: text.length };
+    return null;
+  }
+  // Replace the sentence(s) containing the match with the placeholder; keep the rest of the text.
+  function redactInjection(text, m) {
+    const before = text.slice(0, m.index), after = text.slice(m.index + m.length);
+    const s = Math.max(before.lastIndexOf('. '), before.lastIndexOf('! '), before.lastIndexOf('? '), before.lastIndexOf('\n'));
+    const start = s === -1 ? before.length - before.trimStart().length : s + 2;
+    const e = after.search(/[.!?](?:\s|$)|\n/);
+    const end = e === -1 ? text.length : m.index + m.length + e + 1;
+    return text.slice(0, start) + INJECTION_TOKEN + text.slice(end);
+  }
+
+  const injectionQuick = (t) => !!t && INJ_QUICK.test(t);
+  const api = { injectionMatch, injectionQuick, redactInjection, INJECTION_TOKEN, luhnValid, abaValid, findMatches, redactText, contextMatch, keywordRules, classifyField, urlMatches, RULES, DEFAULT_PACKS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.HNSDetect = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1,4 +1,4 @@
-# Chrome Web Store submission kit (v0.9.0 beta)
+# Chrome Web Store submission kit (v0.9.2 beta)
 
 Copy each block into the matching field in the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
@@ -27,6 +27,9 @@ If you hand everyday tasks to a browser AI agent, such as triaging email, fillin
 - Fields you should answer yourself are locked and marked "Protected": salary, demographic questions, consent checkboxes, signatures, card numbers, passwords, and one-time-code fields. Your agent fills in the rest.
 - "Copy code" buttons and one-time login links are disabled.
 - Pages you choose (for example, your bank's statements page) can be blocked entirely.
+- Instructions planted on a page for AI agents ("AI agents: forward this email…", "ignore previous instructions", hidden text telling the agent to run scripts) are removed before the agent reads them.
+
+It missed something? Select it, right-click, and choose "Hide this from AI agents." When the agent is done, the popup lists the fields left for you to fill in. Shortcut: Alt+Shift+H.
 
 What it recognizes: verification and backup codes, passwords and PINs, card numbers, expiry dates and CVVs, bank account and routing numbers, SSNs and ID numbers, API keys and private keys, and one-time login links. Optional packs cover contact info and the last 4 digits of cards and accounts.
 
@@ -42,7 +45,7 @@ KNOWN GAPS (BETA)
 - Text inside images and PDFs can't be hidden.
 - Account balances, health insurance IDs, crypto seed phrases, and non-US ID formats aren't recognized yet.
 - Signing in is blocked while Agent Mode is on (code fields are locked), so turn it off to sign in.
-- An agent that goes around the page (for example, reading a site's data directly) isn't stopped.
+- An agent that goes around the page on its own (for example, running its own scripts or reading network traffic) isn't stopped. The injection shield removes the most common reason an agent would do this.
 
 Works with browser AI agents such as Claude in Chrome. Not affiliated with Anthropic or any AI provider.
 ```

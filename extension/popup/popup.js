@@ -1,4 +1,5 @@
 const PACKS = [
+  ['injection', 'Hidden instructions aimed at AI agents'],
   ['identity', 'Identity (SSN, date of birth, ID numbers)'],
   ['payments', 'Payments (cards, bank accounts)'],
   ['credentials', 'Passwords & 2FA codes'],
