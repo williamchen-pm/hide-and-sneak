@@ -6,6 +6,8 @@ Hide & Sneak is a free, open-source Chrome extension for people who hand everyda
 
 **[Add to Chrome from the Chrome Web Store](https://chromewebstore.google.com/detail/hide-sneak/nglcphjdboglekojonbglleceicdlchc)** · [Other install options](#install)
 
+**New in 0.9.3:** recognizes crypto recovery phrases, health insurance IDs, and more ID types; **Unlock for 2 min** lets you sign in without turning protection off; PDFs are blocked instead of silently readable. [See all changes](CHANGELOG.md).
+
 > [!WARNING]
 > **This is a beta.** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
 >
@@ -49,14 +51,16 @@ It also covers **tab titles**, since agents read those too.
 - Demographic / EEO questions (gender, race, Hispanic/Latino, veteran, disability), including custom dropdowns on Greenhouse and radio surveys on Lever
 - Background-check consent, "I certify…" statements, and signatures
 - Card numbers, CVVs, expiry dates, bank and routing numbers
-- Passwords and one-time-code fields
-- SSN, date of birth, and government ID fields
+- Passwords, PINs, one-time-code fields, and security questions
+- Crypto wallet recovery phrase fields
+- SSN, date of birth, government ID, and tax ID fields (including EIN, UK National Insurance, Canadian SIN)
+- Health insurance member, group, and policy ID fields
 
 ![A job application where salary, demographic questions, consent, and signature are covered by "Protected by Hide & Sneak" markers](docs/images/job-application.png)
 
-**Also:** "Copy code / password / key" buttons are blocked, and you can list pages that should be blocked entirely (e.g. your bank's statements page).
+**Also:** "Copy code / password / key" buttons are blocked, PDFs are blocked while Agent Mode is on (no extension can hide text inside Chrome's PDF viewer; you can switch this to a warning), and you can list pages that should be blocked entirely (e.g. your bank's statements page).
 
-**Optional packs** (off by default, turn on in the popup): **Contact info** (phone, address, email) and **Last 4 digits** of cards and accounts.
+**Optional packs** (off by default, turn on in the popup): **Account balances**, **Crypto wallet addresses**, **Contact info** (phone, address, email), and **Last 4 digits** of cards and accounts. They're off because agents often need these to do their job.
 
 ## Known gaps (beta)
 
@@ -119,7 +123,7 @@ It asks for access to every site, because an agent can go anywhere. That's a lot
 
 - **Nothing leaves your computer.** The extension makes no network requests at all: there's no `fetch`, XHR, WebSocket, or beacon anywhere in its code. No analytics, no accounts, no servers.
 - **Nothing runs when Agent Mode is off.** Its page code is only registered while Agent Mode is on.
-- **Original values are never saved.** The extension doesn't keep them on the page, in its storage, or in the activity log, which records only *what kind* of thing was hidden, where, and when.
+- **Original values are never saved.** They're not kept in the extension's storage or in the activity log, which records only *what kind* of thing was hidden, where, and when. The one exception is in-memory and temporary: the real target of a disabled login link stays in that page's memory so the link can work again when you unlock the page or turn Agent Mode off. It's gone when you close the tab.
 - **No remote code.** Everything it runs is in this repository.
 - **Open source (MIT).** Read every line in [`extension/`](extension/).
 
@@ -128,6 +132,8 @@ It asks for access to every site, because an agent can go anywhere. That's a lot
 | Access to all sites | To hide and lock things on whatever page your agent is using |
 | `scripting` | To switch protection on and off without reloading your tabs |
 | `storage` | To keep your settings and the local activity log on your computer |
+| `contextMenus` | For the right-click **Hide this from AI agents** and **Report something Hide & Sneak missed** commands |
+| `alarms` | For the optional auto-off timer (off unless you turn it on) |
 
 ## Also handy for screen sharing
 
