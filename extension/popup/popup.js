@@ -121,8 +121,10 @@ async function renderTurn(tab) {
     $('turnNote').textContent = left ? 'Click one to jump to it. They\'re outlined on the page.' : 'You filled in everything your agent left for you.';
   }
   const ul = $('turnList'); ul.innerHTML = '';
-  for (const it of items) {
+  const SHOW = 5;
+  items.forEach((it, n) => {
     const li = document.createElement('li'); if (it.done) li.className = 'done';
+    if (n >= SHOW) li.hidden = true;
     const b = document.createElement('button');
     b.innerHTML = '<span></span><span></span>';
     b.firstChild.textContent = it.label;
@@ -133,6 +135,14 @@ async function renderTurn(tab) {
       if (mode !== 'locked') window.close();
     };
     li.appendChild(b); ul.appendChild(li);
+  });
+  if (items.length > SHOW) {
+    // Keep the popup short: show the first few, with a link for the rest.
+    const li = document.createElement('li');
+    const more = document.createElement('a'); more.href = '#'; more.className = 'more';
+    more.textContent = `Show all ${items.length}`;
+    more.onclick = (e) => { e.preventDefault(); ul.querySelectorAll('li[hidden]').forEach(x => x.hidden = false); li.remove(); };
+    li.appendChild(more); ul.appendChild(li);
   }
   box.hidden = false;
 }

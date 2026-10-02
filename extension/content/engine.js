@@ -514,7 +514,12 @@
 
   // The field's own question, for the "Your turn" list ("Desired base salary", not "salary question").
   function humanLabel(el, st, info) {
-    const clip = (t) => (t || '').replace(/\s+/g, ' ').trim().replace(/[\s*:]+$/, '').slice(0, 60);
+    const clip = (t) => {
+      t = (t || '').replace(/\s+/g, ' ').trim().replace(/[\s*:]+$/, '');
+      if (t.length <= 60) return t;
+      const cut = t.slice(0, 58); const sp = cut.lastIndexOf(' ');
+      return (sp > 30 ? cut.slice(0, sp) : cut).replace(/[\s,.;:]+$/, '') + '…';
+    };
     if (el.type === 'radio' || (el.type === 'checkbox' && groupMembers(el).length > 1)) {
       const fs = el.closest('fieldset'), lg = fs && fs.querySelector('legend');
       if (lg && textOf(lg)) return clip(textOf(lg));

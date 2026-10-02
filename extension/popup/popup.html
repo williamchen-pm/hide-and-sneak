@@ -24,8 +24,9 @@
   .turn li button:hover, .turn li button:focus-visible { background: var(--soft); }
   .turn li button span:last-child { color: var(--muted); font-size: 12px; }
   .turn li.done button { text-decoration: line-through; color: var(--muted); }
+  .turn a.more { display: inline-block; padding: 4px 6px; font-size: 12px; }
   .unlock { display:flex; align-items:center; justify-content:space-between; gap:8px; margin: -4px 0 12px; font-size: 12px; }
-  .unlock button { padding: 4px 10px; font-size: 12px; }
+  .unlock button { padding: 4px 10px; font-size: 12px; white-space: nowrap; flex: none; }
   .note { margin: -4px 0 12px; padding: 8px 10px; border-radius: 8px; background: var(--soft); font-size: 12px; }
   .note.warn { background: #fff3cd; color: #664d03; }
   select { font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }

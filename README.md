@@ -101,7 +101,7 @@ Chrome may show a "developer mode extensions" notice on startup; that's normal f
 - **Signing in?** Click **Unlock for 2 min** in the popup. Only that tab unlocks, including the next steps of the sign-in, then it locks again by itself.
 - **Auto-off** (optional): have Agent Mode turn itself off after 30 minutes to 4 hours. It's off by default, since turning protection off in the middle of an agent's task would unlock fields.
 
-![The Hide & Sneak popup with Agent Mode on, protection packs, and report links](docs/images/popup.png)
+<img src="docs/images/popup.png" width="300" alt="The Hide & Sneak popup with Agent Mode on: 13 items protected, an Unlock for 2 min button, the list of fields left for you, and the protection packs">
 
 **Try it without installing:** the [job-application demo](https://williamchen-pm.github.io/hide-and-sneak/demo/job-application.html) runs the same code on a fictional form. Toggle protection on and off to compare.
 
