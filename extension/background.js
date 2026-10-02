@@ -167,11 +167,18 @@ chrome.alarms.onAlarm.addListener(onAlarm);
 
 // ---------- right-click menu ----------
 const REPO = 'https://github.com/williamchen-pm/hide-and-sneak';
+// onInstalled and onStartup can both fire when Chrome starts after an update, so two rebuilds
+// could interleave and the second "create" would hit a duplicate id. Run rebuilds one at a time,
+// and treat "already exists" as fine.
+let menuQueue = Promise.resolve();
 function createMenus() {
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: 'hns-hide', title: 'Hide this from AI agents', contexts: ['selection'] });
-    chrome.contextMenus.create({ id: 'hns-report', title: 'Report something Hide && Sneak missed', contexts: ['page', 'selection'] });
-  });
+  menuQueue = menuQueue.then(async () => {
+    await chrome.contextMenus.removeAll();
+    const ok = () => void chrome.runtime.lastError;
+    chrome.contextMenus.create({ id: 'hns-hide', title: 'Hide this from AI agents', contexts: ['selection'] }, ok);
+    chrome.contextMenus.create({ id: 'hns-report', title: 'Report something Hide && Sneak missed', contexts: ['page', 'selection'] }, ok);
+  }).catch(() => {});
+  return menuQueue;
 }
 // Small confirmation on the page. It never repeats the selected text, so it can't leak it to a
 // screenshot. Marked data-hns so the engine ignores it.
