@@ -1,4 +1,4 @@
-# Chrome Web Store submission kit (v0.9.3 beta)
+# Chrome Web Store submission kit (v0.10.0 beta)
 
 Copy each block into the matching field in the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
@@ -10,9 +10,9 @@ Upload **`dist/hide-and-sneak-0.9.0.zip`** (built from the `extension/` folder, 
 
 **Name** (from the manifest): `Hide & Sneak`
 
-**Summary** (max 132 characters, 129 used):
+**Summary** (max 132 characters, 130 used):
 ```
-Beta. Hides 2FA codes, card and account numbers, and passwords from browser AI agents, and locks fields you should fill yourself.
+Beta. Hides 2FA codes, card and account numbers, and passwords from browser AI agents and on screen shares. Locks or masks fields.
 ```
 
 **Description:**
@@ -36,6 +36,9 @@ What it recognizes: verification and backup codes, passwords and PINs, crypto wa
 Need to sign in while your agent works? "Unlock for 2 min" opens just that tab for sign-in, then locks it again. PDFs can't be redacted by any extension, so they're blocked while Agent Mode is on (or shown with a warning, your choice).
 
 When the agent is done, turn Agent Mode off. Protected fields unlock right away, and nothing the agent filled in is lost.
+
+SHARING YOUR SCREEN?
+Pick "Screen sharing" in the popup to turn on Presenting mode before a Zoom, Teams, or Meet call. Codes, account numbers, and IDs are hidden the same way, and sensitive form fields show dots as you type instead of being locked, so you can still fill them in.
 
 PRIVACY
 - No network requests, no analytics, no accounts.
@@ -68,7 +71,7 @@ Works with browser AI agents such as Claude in Chrome. Not affiliated with Anthr
 
 **Single purpose:**
 ```
-Hide & Sneak hides sensitive information on web pages and locks sensitive form fields while the user's browser AI agent is working (Agent Mode), so the agent can't read or fill them in.
+Hide & Sneak hides sensitive information on web pages and protects sensitive form fields while a browser AI agent is working for the user (Agent Mode: fields are locked) or while the user is sharing their screen (Presenting mode: fields are masked), so the agent or the audience can't see them.
 ```
 
 **Permission justifications:**

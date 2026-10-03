@@ -55,6 +55,12 @@ async function setBadge(tabId) {
     }
   }
   const c = (tabId != null && tabCounts.get(tabId)) || { protected: 0, misses: 0 };
+  if (s.mode === 'present') {
+    await chrome.action.setBadgeBackgroundColor({ ...opts, color: '#1565C0' });
+    await chrome.action.setBadgeText({ ...opts, text: 'PRES' });
+    await chrome.action.setTitle({ ...opts, title: `Hide & Sneak: Presenting mode ON. ${c.protected} hidden or masked on this tab.` });
+    return;
+  }
   await chrome.action.setBadgeBackgroundColor({ ...opts, color: c.misses ? '#C98A00' : '#C62828' });
   await chrome.action.setBadgeText({ ...opts, text: c.protected ? String(Math.min(c.protected, 999)) : 'ON' });
   await chrome.action.setTitle({ ...opts, title: `Hide & Sneak: Agent Mode ON. ${c.protected} protected on this tab${c.misses ? `, ${c.misses} rule misses` : ''}.` });
@@ -221,6 +227,15 @@ async function onMenuClick(info, tab) {
   }
 }
 chrome.contextMenus.onClicked.addListener(onMenuClick);
+
+// Switching between Agent and Presenting mode updates every tab's badge.
+chrome.storage.onChanged.addListener(async (changes) => {
+  if (!changes.settings) return;
+  const o = changes.settings.oldValue || {}, n = changes.settings.newValue || {};
+  if ((o.mode || 'agent') === (n.mode || 'agent')) return;
+  const tabs = await chrome.tabs.query({});
+  await setBadge(); for (const t of tabs) await setBadge(t.id);
+});
 
 // Changing the auto-off setting while Agent Mode is on reschedules the timer from now.
 chrome.storage.onChanged.addListener(async (changes) => {

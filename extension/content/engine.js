@@ -24,6 +24,10 @@
   const LINK_PLACEHOLDER = '#hidden-by-hide-and-sneak';
 
   let settings = null, extraRules = [], observer = null, active = true, sessionId = null;
+  // Presenting mode (screen sharing): same hiding, but sensitive fields are masked instead of
+  // locked, since the person typing is you. Agent-only defenses (locks, link/copy-button blocking,
+  // injection shield, PDF blocking) are skipped.
+  const presenting = () => !!(settings && settings.mode === 'present');
   const locked = new Map();        // element -> { kind, marker, info }
   const pending = [];              // log entries waiting to be sent
   const pageKey = location.origin + location.pathname;
@@ -197,7 +201,7 @@
     return null;
   }
   function shieldText(node, parent) {
-    if (!settings.packs || settings.packs.injection === false) return false;
+    if (presenting() || !settings.packs || settings.packs.injection === false) return false;
     const t = node.nodeValue;
     if (!D.injectionQuick(t)) return false;
     let m = D.injectionMatch(t, 'text'), hiddenEl = null;
@@ -241,7 +245,7 @@
   // doesn't match any single text node. Check the smallest blocks whose combined text matches.
   const BLOCK_SEL = 'p, li, td, th, dd, dt, blockquote, h1, h2, h3, h4, h5, h6, div, section, article, span, label, figcaption, summary';
   function shieldBlocks(root) {
-    if (!settings.packs || settings.packs.injection === false || !root || root.nodeType !== 1 || isOurs(root)) return;
+    if (presenting() || !settings.packs || settings.packs.injection === false || !root || root.nodeType !== 1 || isOurs(root)) return;
     const rt = root.textContent || '';
     if (!D.injectionQuick(rt) || !D.injectionMatch(rt.replace(/\s+/g, ' '), 'text')) return;
     const cands = [root, ...root.querySelectorAll(BLOCK_SEL)].filter(e => !isOurs(e) && !SKIP_TAGS.has(e.tagName) &&
@@ -348,7 +352,7 @@
     // target (the visible text stays), so the agent can neither read nor follow it.
     if ((el.tagName === 'A' || el.tagName === 'AREA') && el.hasAttribute('href')) {
       const h = el.getAttribute('href');
-      if (h && h !== LINK_PLACEHOLDER) {
+      if (h && h !== LINK_PLACEHOLDER && !presenting()) {
         const r = D.redactText(h, settings.packs, extraRules);
         if (r.hits.length) {
           linkOriginals.set(el, h);
@@ -360,7 +364,7 @@
     for (const a of REDACT_ATTRS) {
       const v = el.getAttribute && el.getAttribute(a);
       if (!v) continue;
-      if (settings.packs && settings.packs.injection !== false && v !== INJ_TOKEN && D.injectionMatch(v, 'attr')) {
+      if (!presenting() && settings.packs && settings.packs.injection !== false && v !== INJ_TOKEN && D.injectionMatch(v, 'attr')) {
         el.setAttribute(a, INJ_TOKEN); totalProtected++;
         log({ effect: 'redact', ruleId: 'injection', pack: 'injection', token: INJ_TOKEN, where: 'attr:' + a });
         continue;
@@ -447,17 +451,17 @@
   }
 
   function considerField(el) {
-    if (locked.has(el) || isOurs(el)) return;
+    if (locked.has(el) || masked.has(el) || isOurs(el)) return;
     const meta = { type: el.type || el.tagName.toLowerCase(), autocomplete: el.getAttribute('autocomplete') || '',
                    name: el.name || '', id: el.id || '', labelText: fieldContext(el) };
     const c = D.classifyField(meta, settings.packs);
-    if (c) { lockField(el, c); return; }
+    if (c) { (presenting() ? maskField : lockField)(el, c); return; }
     // A4: an unlabeled field that already holds a sensitive value (e.g. a pre-filled SSN on a
     // profile page). Lock it too. Contact details are meant to be filled in, so they're ignored.
     const v = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') ? '' : (el.value || '');
     if (v && v.length >= 4) {
       const hit = D.redactText(v, settings.packs, extraRules).hits.find(h => h.pack !== 'contact');
-      if (hit) lockField(el, { pack: hit.pack, label: 'field holding a ' + hit.token.replace(/[\[\]]/g, '').toLowerCase(), reason: 'value matches ' + hit.ruleId });
+      if (hit) (presenting() ? maskField : lockField)(el, { pack: hit.pack, label: 'field holding a ' + hit.token.replace(/[\[\]]/g, '').toLowerCase(), reason: 'value matches ' + hit.ruleId });
     }
   }
 
@@ -467,10 +471,41 @@
   // bypassing the page text. Blocked while Agent Mode is on.
   const COPY_RE = /\bcopy\b[\s\S]{0,20}\b(?:code|otp|passcode|password|pin|key|token|backup codes?)\b/i;
   function considerCopyButton(el) {
-    if (locked.has(el) || isOurs(el)) return;
+    if (presenting() || locked.has(el) || isOurs(el)) return;
     const label = ((el.getAttribute('aria-label') || '') + ' ' + (el.textContent || '')).replace(/\s+/g, ' ').trim();
     if (label.length > 60 || !COPY_RE.test(label)) return;
     lockField(el, { pack: 'credentials', label: 'copy-secret button', reason: 'button text matches copy-secret', isButton: true, ariaText: 'Protected by Hide & Sneak while Agent Mode is on.' });
+  }
+
+  // ---------- presenting mode: mask sensitive fields ----------
+  // Text fields show dots as you type (like a password box); dropdowns, checkboxes and radios are
+  // blurred. Values are left alone and the fields keep working.
+  const masked = new Map();   // element -> { target, prop, prev, prevPriority }
+  function maskField(el, info) {
+    const textLike = (el.tagName === 'INPUT' && !/^(?:checkbox|radio|range|color|file|button|submit|reset|image|hidden|password)$/i.test(el.type)) || el.tagName === 'TEXTAREA';
+    if (el.type === 'password') return;           // already dots
+    const target = textLike ? el : (coverTarget(el) || el);
+    const prop = textLike ? '-webkit-text-security' : 'filter';
+    const val = textLike ? 'disc' : 'blur(6px)';
+    if ([...masked.values()].some(m => m.target === target && m.prop === prop)) { masked.set(el, { shared: true }); return; }
+    masked.set(el, { target, prop, prev: target.style.getPropertyValue(prop), prevPriority: target.style.getPropertyPriority(prop) });
+    target.style.setProperty(prop, val, 'important');
+    target.setAttribute('data-hns-masked', '');
+    totalProtected++;
+    log({ effect: 'field-masked', pack: info.pack, field: info.label, reason: info.reason });
+  }
+  function unmaskAll() {
+    for (const [, m] of masked) {
+      if (m.shared) continue;
+      if (m.prev) m.target.style.setProperty(m.prop, m.prev, m.prevPriority); else m.target.style.removeProperty(m.prop);
+      m.target.removeAttribute('data-hns-masked');
+    }
+    masked.clear();
+  }
+  // Keep masks on if the page rewrites the field's inline style (React does this).
+  function enforceMasks() {
+    for (const [, m] of masked) if (!m.shared && m.target.isConnected && !m.target.style.getPropertyValue(m.prop))
+      m.target.style.setProperty(m.prop, m.prop === 'filter' ? 'blur(6px)' : 'disc', 'important');
   }
 
   function clearField(el) {
@@ -702,7 +737,7 @@
     todo = [];
   }
   // Read by the popup (chrome.scripting runs in this same isolated world, so pages can't see or call these).
-  globalThis.__hnsTurn = () => active
+  globalThis.__hnsTurn = () => presenting() ? { mode: 'present', items: [] } : active
     ? { mode: 'locked', items: lockedEntries().map(e => ({ label: e.label })) }
     : { mode: 'todo', items: todo.filter(t => t.target.isConnected).map(t => ({ label: t.label, done: t.done })) };
   globalThis.__hnsJump = (i) => {
@@ -812,7 +847,7 @@
     }
     if (offMessage) { banner.style.background = '#e8f5e9'; banner.style.color = '#1b5e20'; banner.textContent = offMessage; setTimeout(() => banner && banner.remove(), 6000); return; }
     banner.style.background = '#c62828'; banner.style.color = '#fff';
-    banner.textContent = '🛡 Hide & Sneak is on: sensitive info is hidden' + (totalProtected ? ` (${totalProtected} protected)` : '');
+    banner.textContent = (presenting() ? '🛡 Presenting mode: sensitive info is hidden' : '🛡 Hide & Sneak is on: sensitive info is hidden') + (totalProtected ? ` (${totalProtected} protected)` : '');
   }
 
   // ---------- observer ----------
@@ -874,18 +909,18 @@
     // or at least warn, instead of leaving them silently readable.
     if (document.contentType === 'application/pdf') {
       try { chrome.runtime.sendMessage({ type: 'pdf' }); } catch (_) {}
-      if (settings.blockPdfs !== false) {
+      if (settings.blockPdfs !== false && !presenting()) {
         log({ effect: 'pdf-blocked' }); totalProtected++; flush();
         showBlockedPage('This PDF is hidden from your AI agent. Hide & Sneak can\'t hide text inside PDFs, so they\'re blocked while Agent Mode is on. To view it, turn off Agent Mode, or turn off “Block PDFs” in the Hide & Sneak menu.');
       } else {
         log({ effect: 'pdf-seen' }); flush(); revealPage(); active = false;
-        const warn = () => updateBanner('⚠️ Hide & Sneak can\'t protect PDFs. Your agent can read everything in this one.');
+        const warn = () => updateBanner(presenting() ? '⚠️ Hide & Sneak can\'t hide text inside PDFs. Everything in this one is visible on your screen share.' : '⚠️ Hide & Sneak can\'t protect PDFs. Your agent can read everything in this one.');
         if (document.body) warn(); else document.addEventListener('DOMContentLoaded', warn, { once: true });
       }
       return;
     }
     let until = 0;
-    try { const r = await chrome.runtime.sendMessage({ type: 'pauseState' }); until = (r && r.until) || 0; } catch (_) {}
+    if (!presenting()) try { const r = await chrome.runtime.sendMessage({ type: 'pauseState' }); until = (r && r.until) || 0; } catch (_) {}
     if (until > Date.now()) { revealPage(); active = false; startPause(until); return; }
     if (pageProtected(location.href)) {
       log({ effect: 'page-blocked' }); totalProtected++; flush();
@@ -906,7 +941,7 @@
     else firstPass();
     if (wired) return;
     wired = true;
-    setInterval(() => { if (active) { enforceLocks(); checkRoute(); } }, 400);
+    setInterval(() => { if (active) { enforceLocks(); enforceMasks(); checkRoute(); } }, 400);
     // Sweep locked fields right before any form submits, so a script write can't slip through.
     addEventListener('submit', () => { if (active) enforceLocks(); }, true);
     addEventListener('formdata', (e) => { if (!active) return; for (const [el] of locked) if (el.name && e.formData.has(el.name)) e.formData.delete(el.name); }, true);
@@ -920,12 +955,23 @@
     const next = changes.settings.newValue || {};
     if (!next.agentMode && pausedUntil) endPause();
     if (active && !next.agentMode) {
+      const wasPresenting = presenting();
       active = false;
       if (observer) observer.disconnect();
       const n = unlockAll();
+      unmaskAll();
       revealPage();
-      updateBanner(n ? `Agent Mode off: ${n} field${n === 1 ? ' is' : 's are'} waiting for you (outlined). Reload to see hidden text.`
+      updateBanner(wasPresenting ? 'Presenting mode off. Reload the page to see hidden text.'
+                 : n ? `Agent Mode off: ${n} field${n === 1 ? ' is' : 's are'} waiting for you (outlined). Reload to see hidden text.`
                      : 'Agent Mode off: fields unlocked. Reload the page to see hidden text.');
+    } else if (active && next.agentMode && (next.mode || 'agent') !== ((settings && settings.mode) || 'agent')) {
+      // Switched between Agent and Presenting while on: undo this mode's field handling, then
+      // re-protect the page the other way. (Hidden text stays hidden in both.)
+      if (observer) observer.disconnect();
+      unlockAll(false); unmaskAll();
+      settings = Object.assign({ packs: {}, pageRules: [], keywords: [], siteOff: [] }, next);
+      extraRules = D.keywordRules(settings.keywords);
+      activate(true);
     } else if (!active && next.agentMode && settings && !(next.siteOff || []).includes(location.hostname) &&
                !(pausedUntil && (changes.settings.oldValue || {}).agentMode)) {
       if (pausedUntil) endPause();

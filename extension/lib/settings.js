@@ -2,7 +2,8 @@
 (function (root) {
   'use strict';
   const DEFAULTS = {
-    agentMode: false,
+    agentMode: false,   // protection on/off (named for the original mode)
+    mode: 'agent',      // 'agent' (lock fields) or 'present' (screen sharing: mask fields)
     packs: { identity: true, payments: true, credentials: true, health: true, contact: false, job: true, last4: false, crypto: false, balances: false, injection: true },
     pageRules: [],      // URL patterns, e.g. "https://www.amazon.com/cpe/yourpayments/*"
     keywords: [],       // phrases to redact

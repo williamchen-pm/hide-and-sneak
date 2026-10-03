@@ -92,7 +92,7 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++
   const s1Tab = await sw.evaluate(async (url) => (await chrome.tabs.query({ url }))[0].id, BASE + 'seed.html');
   const forged = await s1.evaluate(() => new Promise(res => { try { chrome.runtime.sendMessage({ type: 'undoHide' }, () => res('sent')); } catch (e) { res('blocked'); } }));
   ok(forged === 'blocked', 'A web page cannot trigger undo');
-  const packs = await pop.evaluate(() => document.getElementById('packs').innerText);
+  const packs = await pop.evaluate(() => document.getElementById('packs').textContent);
   ok(/Health & insurance IDs/.test(packs) && /Account balances/.test(packs) && /Crypto wallet addresses/.test(packs), 'Popup lists the new packs');
 
   // ---- 5. No originals in the activity log ----

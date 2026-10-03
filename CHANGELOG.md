@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0 (beta)
+
+- **Presenting mode, for screen sharing.** Pick **Screen sharing** at the top of the popup and turn it on before you share your screen in Zoom, Teams, or Meet. Codes, account numbers, and the other sensitive text are hidden just like in Agent Mode, but sensitive form fields are **masked** instead of locked: what you type shows as dots, dropdowns and checkboxes are blurred, and everything keeps working, because you're the one typing. Login links, copy buttons, and planted-instruction text are left alone (those defenses are for agents). The badge says **PRES**. You can switch modes while protection is on.
+- **Simpler popup.** The mode switch and daily controls are at the top; protection packs, settings, and report links fold into collapsible sections. The busiest view now fits in Chrome's popup without scrolling.
+- "Your turn" shows the first 4 fields with **Show all**, and long questions end with "…" at a word break.
+- Fix: a harmless "duplicate id" error could appear on the Errors page when Chrome started after an update.
+
 ## 0.9.3 (beta)
 
 - **Recognizes more kinds of sensitive info.** The coverage audit went from 16 of 28 samples to all of them:

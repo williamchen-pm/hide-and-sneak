@@ -2,11 +2,11 @@
 
 **Let browser AI agents see only what they need.**
 
-Hide & Sneak is a free, open-source Chrome extension for people who hand everyday tasks to a browser AI agent such as Claude in Chrome: triaging email, filling out job applications, shopping, paying bills. Turn on **Agent Mode** before you delegate. While it's on, sensitive text on the page is replaced with placeholders like `[2FA CODE]`, and form fields you should answer yourself are locked. When Agent Mode is off, the extension does nothing.
+Hide & Sneak is a free, open-source Chrome extension for people who hand everyday tasks to a browser AI agent such as Claude in Chrome: triaging email, filling out job applications, shopping, paying bills. Turn on **Agent Mode** before you delegate. While it's on, sensitive text on the page is replaced with placeholders like `[2FA CODE]`, and form fields you should answer yourself are locked. Sharing your screen instead? **Presenting mode** hides the same things and shows dots in sensitive fields as you type. When protection is off, the extension does nothing.
 
 **[Add to Chrome from the Chrome Web Store](https://chromewebstore.google.com/detail/hide-sneak/nglcphjdboglekojonbglleceicdlchc)** · [Other install options](#install)
 
-**New in 0.9.3:** recognizes crypto recovery phrases, health insurance IDs, and more ID types; **Unlock for 2 min** lets you sign in without turning protection off; PDFs are blocked instead of silently readable. [See all changes](CHANGELOG.md).
+**New in 0.10.0:** **Presenting mode** for screen sharing, and a simpler popup. [See all changes](CHANGELOG.md).
 
 > [!WARNING]
 > **This is a beta.** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
@@ -101,7 +101,7 @@ Chrome may show a "developer mode extensions" notice on startup; that's normal f
 - **Signing in?** Click **Unlock for 2 min** in the popup. Only that tab unlocks, including the next steps of the sign-in, then it locks again by itself.
 - **Auto-off** (optional): have Agent Mode turn itself off after 30 minutes to 4 hours. It's off by default, since turning protection off in the middle of an agent's task would unlock fields.
 
-<img src="docs/images/popup.png" width="300" alt="The Hide & Sneak popup with Agent Mode on: 13 items protected, an Unlock for 2 min button, the list of fields left for you, and the protection packs">
+<img src="docs/images/popup.png" width="300" alt="The Hide & Sneak popup: a switch between AI agent and Screen sharing, Agent Mode on with 13 items protected, an Unlock for 2 min button, the list of fields left for you, and folded Settings">
 
 **Try it without installing:** the [job-application demo](https://williamchen-pm.github.io/hide-and-sneak/demo/job-application.html) runs the same code on a fictional form. Toggle protection on and off to compare.
 
@@ -135,9 +135,16 @@ It asks for access to every site, because an agent can go anywhere. That's a lot
 | `contextMenus` | For the right-click **Hide this from AI agents** and **Report something Hide & Sneak missed** commands |
 | `alarms` | For the optional auto-off timer (off unless you turn it on) |
 
-## Also handy for screen sharing
+## Presenting mode (screen sharing)
 
-Hidden text stays hidden on a screen share too. Chrome's own address bar, history suggestions, and bookmarks can't be hidden by any extension, so when presenting:
+Sharing your screen in Zoom, Teams, or Meet? Open the popup, pick **🖥 Screen sharing**, and turn it on before you share.
+
+- Codes, account and card numbers, IDs, and the rest are hidden, exactly as in Agent Mode.
+- Sensitive form fields are **masked, not locked**: what you type in an SSN or card field shows as dots, and dropdowns and checkboxes for things like demographic questions are blurred. Everything keeps working, because you're the one typing.
+- Login links and copy buttons keep working, and the toolbar badge says **PRES**.
+- PDFs can't be hidden, so you'll see a warning when one is open.
+
+You can switch between Agent Mode and Presenting mode while protection is on. Chrome's own address bar, history suggestions, and bookmarks can't be hidden by any extension, so when presenting:
 
 - Share a **single tab** instead of your whole screen.
 - Use a separate "Presenting" Chrome profile or a **Guest** window.

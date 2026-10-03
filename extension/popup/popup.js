@@ -18,6 +18,12 @@ async function render() {
   let host = '';
   try { host = new URL(tab.url).hostname; } catch (_) {}
   $('agent').checked = s.agentMode;
+  const present = s.mode === 'present';
+  document.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === (present ? 'present' : 'agent'))));
+  $('modeTitle').textContent = present ? 'Presenting Mode' : 'Agent Mode';
+  $('modeDesc').textContent = present
+    ? 'Turn on before you share your screen. Sensitive info is hidden, and sensitive fields show dots as you type.'
+    : 'Turn on before you hand a task to your AI agent.';
   $('host').textContent = host || 'this site';
   $('siteoff').checked = !!host && s.siteOff.includes(host);
   $('siteoff').disabled = !host;
@@ -25,7 +31,7 @@ async function render() {
   if (s.agentMode) {
     const stats = await chrome.runtime.sendMessage({ type: 'getTabStats', tabId: tab.id });
     st.className = 'status on';
-    st.textContent = `On. ${stats.protected} item${stats.protected === 1 ? '' : 's'} protected on this tab` +
+    st.textContent = `On. ${stats.protected} item${stats.protected === 1 ? '' : 's'} ${present ? 'hidden or masked' : 'protected'} on this tab` +
       (stats.misses ? `, ${stats.misses} rule miss${stats.misses === 1 ? '' : 'es'}.` : '.');
     const { at } = await chrome.runtime.sendMessage({ type: 'getAutoOff' });
     if (at) st.textContent += ` Turns off at ${new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`;
@@ -33,6 +39,7 @@ async function render() {
     st.className = 'status';
     st.textContent = "Off. The extension isn't touching any page.";
   }
+  $('packSummary').textContent = `${PACKS.filter(([k]) => s.packs[k]).length} of ${PACKS.length} packs on`;
   $('packs').innerHTML = '';
   for (const [key, label] of PACKS) {
     const l = document.createElement('label');
@@ -62,7 +69,7 @@ async function render() {
 // Unlock for sign-in, PDF notice, and undo for right-click "Hide this". These live in the popup on
 // purpose: an agent can click things on the page, but it can't reach the extension's popup.
 async function renderTabTools(tab, s) {
-  const web = tab && /^https?:/.test(tab.url || '');
+  const web = tab && /^https?:/.test(tab.url || '') && s.mode !== 'present';   // unlock/PDF tools are for Agent Mode
   const info = (s.agentMode && web) ? await chrome.runtime.sendMessage({ type: 'tabInfo', tabId: tab.id }) : { pausedUntil: 0, pdf: false };
   const row = $('unlockRow');
   row.hidden = !(s.agentMode && web) || info.pdf;
@@ -115,13 +122,13 @@ async function renderTurn(tab) {
   const left = items.filter(i => !i.done).length;
   if (mode === 'locked') {
     $('turnHead').textContent = `🔒 ${items.length} field${items.length === 1 ? '' : 's'} left for you`;
-    $('turnNote').textContent = 'Your agent can\'t fill these. Turn Agent Mode off when it\'s done, then fill them in.';
+    $('turnNote').textContent = 'Fill these in yourself after Agent Mode is off.';
   } else {
     $('turnHead').textContent = left ? `✏️ Your turn: ${left} field${left === 1 ? '' : 's'} to fill` : '✅ All done';
     $('turnNote').textContent = left ? 'Click one to jump to it. They\'re outlined on the page.' : 'You filled in everything your agent left for you.';
   }
   const ul = $('turnList'); ul.innerHTML = '';
-  const SHOW = 5;
+  const SHOW = 4;
   items.forEach((it, n) => {
     const li = document.createElement('li'); if (it.done) li.className = 'done';
     if (n >= SHOW) li.hidden = true;
@@ -157,6 +164,17 @@ chrome.commands.getAll().then(cmds => {
   if (c && c.shortcut) { el.append(' '); el.appendChild(a); }
   el.querySelectorAll('a').forEach(x => x.onclick = (e) => { e.preventDefault(); chrome.tabs.create({ url: 'chrome://extensions/shortcuts' }); });
 });
+
+// Mode switch. Changing it while protection is on re-protects open tabs the new way.
+document.querySelectorAll('.modes button').forEach(b => b.onclick = async () => {
+  await HNSSettings.setSettings({ mode: b.dataset.mode });
+  render();
+});
+// Remember which sections are open (this browser only).
+for (const id of ['settingsBox', 'reportBox']) {
+  try { $(id).open = localStorage.getItem('hns-open-' + id) === '1'; } catch (_) {}
+  $(id).addEventListener('toggle', () => { try { localStorage.setItem('hns-open-' + id, $(id).open ? '1' : '0'); } catch (_) {} });
+}
 
 $('agent').onchange = async () => {
   $('agent').disabled = true;
