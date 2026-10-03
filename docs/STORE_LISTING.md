@@ -42,7 +42,7 @@ Pick "Screen sharing" in the popup to turn on Presenting mode before a Zoom, Tea
 
 PRIVACY
 - No network requests, no analytics, no accounts.
-- Does nothing while Agent Mode is off.
+- Does nothing while protection is off.
 - Original values are never saved. The local activity log records only what kind of item was hidden, where, and when.
 - Free and open source (MIT): https://github.com/williamchen-pm/hide-and-sneak
 
