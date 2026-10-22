@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to Hide &amp; Sneak</title>
+<link rel="stylesheet" href="../ui.css">
+<style>
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  .lede { color: var(--muted); font-size: 15px; margin: 0 0 24px; }
+  .step { border:1px solid var(--line); border-radius: 12px; padding: 18px; margin: 14px 0; }
+  .step h2 { font-size: 16px; margin: 0 0 6px; display:flex; gap:10px; align-items:center; }
+  .num { display:inline-flex; width:24px; height:24px; border-radius:50%; background: var(--soft); align-items:center; justify-content:center; font-size:13px; flex:none; }
+  .done .num { background:#2e7d32; color:#fff; }
+  .cards { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+  .mode { text-align:left; border:2px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 10px; padding: 12px; font-weight: 400; }
+  .mode b { display:block; font-size: 15px; margin-bottom: 4px; }
+  .mode[aria-pressed="true"] { border-color: var(--accent); }
+  .muted { font-size: 13px; }
+  kbd { font: 600 11px/1 ui-monospace, monospace; padding: 2px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--soft); }
+  .links { margin-top: 26px; display:flex; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Welcome to Hide &amp; Sneak</h1>
+  <p class="lede">Let browser AI agents, and anyone watching your screen share, see only what they need. Three quick steps, about a minute.</p>
+
+  <section class="step" id="stepPin">
+    <h2><span class="num">1</span> Pin it to your toolbar</h2>
+    <p class="muted" id="pinText">Click the puzzle-piece icon to the right of the address bar, then click the pin next to <b>Hide &amp; Sneak</b>. That's where you'll turn protection on and off.</p>
+  </section>
+
+  <section class="step" id="stepMode">
+    <h2><span class="num">2</span> How will you use it most?</h2>
+    <p class="muted">You can switch any time from the popup.</p>
+    <div class="cards">
+      <button class="mode" data-mode="agent" aria-pressed="false"><b>🤖 With an AI agent</b>Before you hand a task to an agent like Claude in Chrome. Sensitive text is hidden, and fields you should fill yourself are locked.</button>
+      <button class="mode" data-mode="present" aria-pressed="false"><b>🖥 For screen sharing</b>Before a Zoom, Teams, or Meet call. Sensitive text is hidden, and sensitive fields show dots as you type.</button>
+    </div>
+  </section>
+
+  <section class="step" id="stepTest">
+    <h2><span class="num">3</span> See it work</h2>
+    <p class="muted">This turns protection on and opens a test page full of fake sensitive information, so you can see what gets hidden. Turn it off afterward from the icon, or with <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>H</kbd>.</p>
+    <button id="runTest">Turn on and run the self-test</button>
+  </section>
+
+  <div class="links"><a href="../options/options.html">Rules &amp; activity log</a><a href="https://williamchen-pm.github.io/hide-and-sneak/demo/job-application.html" target="_blank">Try the demos</a><a href="https://williamchen-pm.github.io/hide-and-sneak/privacy.html" target="_blank">Privacy</a><a href="https://github.com/williamchen-pm/hide-and-sneak" target="_blank">Source code</a></div>
+</main>
+<script src="../lib/settings.js"></script>
+<script src="welcome.js"></script>
+</body>
+</html>

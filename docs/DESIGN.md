@@ -88,27 +88,27 @@ flowchart LR
 | V1-4 | Field rules: detect, lock, clear, "🔒 Protected by Hide & Sneak" overlay | UC1, UC2 | ✅ Agreed | 🟩 Built | §6.2 | Agent completes the demo form with every locked field empty |
 | V1-5 | Page rules + in-app navigation hooks | UC2, UC3 | ✅ Agreed | 🟩 Built | §6.2 | Protected page never renders, including after in-app navigation |
 | V1-6 | Keyword rules | UC4 | ✅ Agreed | 🟨 In progress | §6.2 | Match and block modes tested |
-| V1-7 | Gmail adapter: sender + label thread rules | UC5 | ✅ Agreed | ⬜ Not started | §6.2 | Protected threads hidden in the list and message views |
+| V1-7 | Gmail adapter: sender + label thread rules | UC5 | ⏸ Deferred (post-1.0) | ⬜ Not started | §6.2 | Protected threads hidden in the list and message views |
 | V1-8 | Protection packs: Identity, Payments, Credentials, Contact, Job applications | UC1–UC4 | ✅ Agreed | 🟩 Built | §6.3 | Each pack toggles independently; fixtures pass |
 | V1-9 | Fail-closed fallback per rule | All | ✅ Agreed | 🟨 In progress | §6.2 | Missed targets trigger the fallback and a log entry |
 | V1-10 | Popup: manual Agent Mode on/off toggle, badge (on / count / miss), pack toggles, per-site off (no reload on toggle; see decision log) | All | ✅ Agreed | 🟩 Built | §6.4 | State is correct after a reload |
-| V1-20 | First-run onboarding page | All | ✅ Agreed | 🟨 In progress | §6.5 | Setup in under 2 minutes with no rule-writing |
-| V1-21 | "Test my protection" self-test page | All | ✅ Agreed | ⬜ Not started | §6.5 | Pass/fail per item for the user's current rules; works offline |
-| V1-22 | Chrome Web Store listing: privacy disclosure, permission rationale, MIT license | All | ✅ Agreed | 🟨 In progress | §6.7 | Approved and installable |
+| V1-20 | First-run onboarding page | All | ✅ Agreed | 🟩 Built (0.11) | §6.5 | Setup in under 2 minutes with no rule-writing |
+| V1-21 | "Test my protection" self-test page | All | ✅ Agreed | 🟩 Built (0.11, hosted on GitHub Pages) | §6.5 | Pass/fail per item for the user's current rules; works offline |
+| V1-22 | Chrome Web Store listing: privacy disclosure, permission rationale, MIT license | All | ✅ Agreed | ✔️ Live (0.9.0, Oct 2026) | §6.7 | Approved and installable |
 | V1-23 | Public GitHub repo: LICENSE, README, SECURITY.md, CHANGELOG, tagged releases with packaged .zip | All | ✅ Agreed | 🟩 Built | §6.7 | Repo public; release .zip matches the store version |
 | V1-24 | Store assets: 128×128 icon, 440×280 promo tile, 1–5 screenshots (1280×800) | All | ✅ Agreed | 🟩 Built | §6.7 | Assets meet Chrome Web Store specs |
 | V1-25 | Privacy policy page on GitHub Pages | All | ✅ Agreed | 🟩 Built | §6.7 | URL live and matches the store's data disclosures |
 | V1-26 | Pre-publish checks: original name and icon (R10); personal time and equipment (R11); clean-room vs Agent Browser Shield (R12) | All | ✅ Agreed | 🟨 In progress | §9 | R11 confirmed; name chosen (re-check the store before submitting); icon not yet designed |
-| V1-27 | Comparison test vs Agent Browser Shield; publish `COMPARISON.md` | All | ✅ Agreed | ⬜ Not started | §2.3 | Results for all four setups on the three demos, dated, with versions |
-| V1-28 | MAIN-world setter hook on locked fields, to close most of the ~400 ms script-write window | UC1, UC2 | ✅ Agreed | ⬜ Not started | §8 | A `javascript_tool` write to a locked field reads back empty immediately |
-| V1-11 | Options page: custom rules, JSON import and export | All | ✅ Agreed | 🟨 In progress | §6.4 | Round-trip export and import preserves all rules |
+| V1-27 | Comparison test vs Agent Browser Shield; publish `COMPARISON.md` | All | ⏸ Deferred (1.1) | ⬜ Not started | §2.3 | Results for all four setups on the three demos, dated, with versions |
+| V1-28 | MAIN-world setter hook on locked fields, to close most of the ~400 ms script-write window | UC1, UC2 | ✅ Agreed | ✔️ Verified (0.11, `tests/e2e/guard.js`) | §8 | A `javascript_tool` write to a locked field reads back empty immediately |
+| V1-11 | Options page: custom rules, JSON import and export | All | ✅ Agreed | ✔️ Verified (0.11, `tests/e2e/rc.js`) | §6.4 | Round-trip export and import preserves all rules |
 | V1-12 | Audit log (capped; no original values) + table view | UC6 | ✅ Agreed | ✔️ Verified | §6.6 | Test confirms no originals in storage |
-| V1-13 | Demo: job application (lead demo) | UC1 | ✅ Agreed | 🟨 In progress | §6.8 | Live on GitHub Pages with an off/on toggle |
-| V1-14 | Demo: checkout + saved-cards page | UC2 | ✅ Agreed | ⬜ Not started | §6.8 | Same |
-| V1-15 | Demo: inbox | UC4, UC5 | ✅ Agreed | ⬜ Not started | §6.8 | Same |
-| V1-16 | Coverage check across demos (`COVERAGE.md`) | All | ✅ Agreed | ⬜ Not started | §6.8, §12 | 90% or more of about 40 seeded items; every miss documented |
+| V1-13 | Demo: job application (lead demo) | UC1 | ✅ Agreed | ✔️ Live | §6.8 | Live on GitHub Pages with an off/on toggle |
+| V1-14 | Demo: checkout + saved-cards page | UC2 | ✅ Agreed | 🟩 Built (0.11) | §6.8 | Same |
+| V1-15 | Demo: inbox | UC4, UC5 | ✅ Agreed | 🟩 Built (0.11) | §6.8 | Same |
+| V1-16 | Coverage check across demos (`COVERAGE.md`) | All | ✅ Agreed | ✔️ 44/44, 0/22 false positives (0.11) | §6.8, §12 | 90% or more of about 40 seeded items; every miss documented |
 | V1-17 | Demo GIF: Claude in Chrome on the job application, protection off vs on | UC1 | ✅ Agreed | ⬜ Not started | §6.8 | Embedded in the README |
-| V1-18 | README with threat model, limits, and permission rationale | All | ✅ Agreed | ⬜ Not started | §8, R8 | Threat model matches the shipped behavior |
+| V1-18 | README with threat model, limits, and permission rationale | All | ✅ Agreed | ✔️ Done | §8, R8 | Threat model matches the shipped behavior |
 
 ### v2
 
@@ -182,6 +182,8 @@ flowchart LR
 | 2026-09-30 | Feedback via GitHub issue forms (leak, false positive, site issue, idea), a popup "Report a problem" link that pre-fills version + domain only, and private security advisories. No telemetry; uninstall survey skipped for MVP | Keeps the "no data collected" promise; opening a link is the user's own action |
 | 2026-09-30 | Lock marker wording: "🔒 Protected by Hide & Sneak" / "🔒 Protected" / 🔒 by available width; agent-facing label "Protected by Hide & Sneak. Ask the user to fill this in." | Reads as a feature, not an error, and never truncates. The agent label nudges Claude to hand the field back instead of working around it. |
 | 2026-09-30 | Marker layer is viewport-fixed and trimmed to scrolling ancestors | Markers drifted off fields inside fixed pop-ups (store wallet "Edit payment method") |
+| 2026-10-22 | 1.0 scope: build V1-11/14/15/16/20/21/28 and a real-site check in 0.11; defer V1-7 (Gmail adapter: protected words and pages cover it) and V1-27 (comparison) | 1.0 exit criteria: coverage ≥90%, no new page errors on the real-site check, owner's real-agent session passes, no open leak reports |
+| 2026-10-22 | Coverage is measured on demos we wrote ourselves, so it shows the rules work as designed, not real-world recall; the real-site check and a real-agent session cover that | Avoids over-claiming from a self-built test |
 | 2026-10-02 | 0.10.0: Presenting mode is a mode of the same on/off switch (`settings.mode`), not a second switch. Same text hiding; fields masked with `-webkit-text-security: disc` (text) or `filter: blur` (choices) instead of locked; no link/copy-button/injection/PDF blocking | One switch is simpler to reason about. The user is the one typing, and agent defenses would only get in the way of a presenter. |
 | 2026-10-02 | 0.10.0: popup reorganized: mode switch + daily controls on top; packs, settings, and report links in collapsible sections; "Your turn" shows 4 then Show all | The popup had grown past Chrome's 600px popup limit; busiest state is now 583px |
 | 2026-10-01 | 0.9.3: seed phrases always hidden (credentials); wallet addresses and balances in packs that are off by default; health IDs in a new pack that's on | Seeds are pure secrets. Addresses are public and amounts are often what the agent needs. |

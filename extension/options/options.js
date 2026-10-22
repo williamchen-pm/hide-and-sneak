@@ -50,6 +50,45 @@ $('export').onclick = async () => {
   a.download = `hide-and-sneak-log-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
 };
+// ---------- settings backup ----------
+const PORTABLE = ['mode', 'packs', 'pageRules', 'keywords', 'siteOff', 'highlight', 'blockPdfs', 'autoOffMinutes'];
+$('exportSettings').onclick = async () => {
+  const s = await HNSSettings.getSettings();
+  const out = { app: 'hide-and-sneak', version: chrome.runtime.getManifest().version, exportedAt: new Date().toISOString(), settings: {} };
+  for (const k of PORTABLE) out.settings[k] = s[k];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }));
+  a.download = `hide-and-sneak-settings-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+};
+$('importSettings').onclick = () => $('importFile').click();
+$('importFile').onchange = async () => {
+  const f = $('importFile').files[0]; $('importFile').value = '';
+  if (!f) return;
+  try { $('importMsg').textContent = await importSettings(await f.text()); $('importMsg').style.color = ''; }
+  catch (e) { $('importMsg').textContent = 'Could not import: ' + e.message; $('importMsg').style.color = '#c62828'; }
+};
+// Validates every field, so a hand-edited or unrelated file can't put bad values into settings.
+async function importSettings(text) {
+  let data; try { data = JSON.parse(text); } catch (_) { throw new Error('that file isn\'t valid JSON.'); }
+  if (!data || data.app !== 'hide-and-sneak' || typeof data.settings !== 'object') throw new Error('that isn\'t a Hide & Sneak settings file.');
+  const s = data.settings, patch = {};
+  const strList = (v) => Array.isArray(v) && v.every(x => typeof x === 'string') ? v.map(x => x.trim()).filter(Boolean).slice(0, 500) : null;
+  if (s.mode === 'agent' || s.mode === 'present') patch.mode = s.mode;
+  if (s.packs && typeof s.packs === 'object') {
+    const cur = (await HNSSettings.getSettings()).packs; patch.packs = { ...cur };
+    for (const k of Object.keys(cur)) if (typeof s.packs[k] === 'boolean') patch.packs[k] = s.packs[k];
+  }
+  for (const k of ['pageRules', 'keywords', 'siteOff']) { const v = strList(s[k]); if (v) patch[k] = v; }
+  for (const k of ['highlight', 'blockPdfs']) if (typeof s[k] === 'boolean') patch[k] = s[k];
+  if ([0, 30, 60, 120, 240].includes(s.autoOffMinutes)) patch.autoOffMinutes = s.autoOffMinutes;
+  if (!Object.keys(patch).length) throw new Error('nothing in that file could be used.');
+  await HNSSettings.setSettings(patch);
+  await load();
+  return `Imported: ${(patch.keywords || []).length} words, ${(patch.pageRules || []).length} pages, ${(patch.siteOff || []).length} skipped sites, and your preferences.`;
+}
+globalThis.__importSettings = importSettings;   // for the automated test
+
 load();
 // Words added with right-click "Hide this" show up here without a reload.
 chrome.storage.onChanged.addListener((c) => { if (c.settings && document.activeElement !== $('keywords')) $('keywords').value = (c.settings.newValue.keywords || []).join('\n'); });

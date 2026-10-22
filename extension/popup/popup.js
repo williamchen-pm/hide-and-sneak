@@ -183,6 +183,7 @@ $('agent').onchange = async () => {
   render().then(() => requestAnimationFrame(() => document.body.classList.add('ready')));
 };
 $('opts').onclick = (e) => { e.preventDefault(); chrome.runtime.openOptionsPage(); };
+$('selftest').onclick = (e) => { e.preventDefault(); chrome.tabs.create({ url: 'https://williamchen-pm.github.io/hide-and-sneak/selftest.html' }); };
 
 // Feedback: open a prefilled GitHub issue form. Only the extension version and the site's domain
 // are included (never the full URL, which can contain private tokens), and only when the user clicks.

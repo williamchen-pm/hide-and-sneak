@@ -333,3 +333,10 @@ test('0.9.3 detection: tax, international, VIN, health, seed phrases, wallets, b
   assert.equal(f('Member ID'), 'health insurance ID');
   assert.equal(f('Pinterest profile'), null);
 });
+
+test('date of birth with words between the label and the date', () => {
+  const r = (t) => D.redactText(t).text;
+  assert.equal(r('Date of birth on file: 03/14/1990'), 'Date of birth on file: [DATE OF BIRTH]');
+  assert.equal(r('DOB is 1990-03-14'), 'DOB is [DATE OF BIRTH]');
+  assert.equal(r('Date of birth must be after 1900'), 'Date of birth must be after 1900');
+});

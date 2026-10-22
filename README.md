@@ -6,7 +6,7 @@ Hide & Sneak is a free, open-source Chrome extension for people who hand everyda
 
 **[Add to Chrome from the Chrome Web Store](https://chromewebstore.google.com/detail/hide-sneak/nglcphjdboglekojonbglleceicdlchc)** · [Other install options](#install)
 
-**New in 0.10.0:** **Presenting mode** for screen sharing, and a simpler popup. [See all changes](CHANGELOG.md).
+**New in 0.11.0:** script writes to locked fields are blocked instantly, a **Test my protection** page, a guided first-run setup, checkout and inbox demos, settings backup, and a published [coverage check](docs/COVERAGE.md) (44 of 44 seeded items on the demos). [See all changes](CHANGELOG.md).
 
 > [!WARNING]
 > **This is a beta.** Hide & Sneak catches the most common sensitive information, but **it will miss some things on some sites**, and it may occasionally hide something harmless. Page layouts vary a lot, and each one it hasn't seen before is a chance to miss. Treat it as an extra layer of protection, not a guarantee, and keep an eye on what your agent is doing.
@@ -58,7 +58,7 @@ It also covers **tab titles**, since agents read those too.
 
 ![A job application where salary, demographic questions, consent, and signature are covered by "Protected by Hide & Sneak" markers](docs/images/job-application.png)
 
-**Also:** "Copy code / password / key" buttons are blocked, PDFs are blocked while Agent Mode is on (no extension can hide text inside Chrome's PDF viewer; you can switch this to a warning), and you can list pages that should be blocked entirely (e.g. your bank's statements page).
+**Also:** scripts can't write into locked fields (an agent's form-filling tool or JavaScript is ignored instantly), "Copy code / password / key" buttons are blocked, PDFs are blocked while Agent Mode is on (no extension can hide text inside Chrome's PDF viewer; you can switch this to a warning), and you can list pages that should be blocked entirely (e.g. your bank's statements page).
 
 **Optional packs** (off by default, turn on in the popup): **Account balances**, **Crypto wallet addresses**, **Contact info** (phone, address, email), and **Last 4 digits** of cards and accounts. They're off because agents often need these to do their job.
 
@@ -103,7 +103,13 @@ Chrome may show a "developer mode extensions" notice on startup; that's normal f
 
 <img src="docs/images/popup.png" width="300" alt="The Hide & Sneak popup: a switch between AI agent and Screen sharing, Agent Mode on with 13 items protected, an Unlock for 2 min button, the list of fields left for you, and folded Settings">
 
-**Try it without installing:** the [job-application demo](https://williamchen-pm.github.io/hide-and-sneak/demo/job-application.html) runs the same code on a fictional form. Toggle protection on and off to compare.
+**Try it without installing:** three demos run the same code on fictional pages. Toggle protection on and off to compare:
+
+- [Job application](https://williamchen-pm.github.io/hide-and-sneak/demo/job-application.html): salary, demographic, and consent questions are left for you.
+- [Checkout](https://williamchen-pm.github.io/hide-and-sneak/demo/checkout.html): the agent fills shipping and a promo code, but not your card, bank, or gift card details.
+- [Inbox](https://williamchen-pm.github.io/hide-and-sneak/demo/inbox.html): codes, account numbers, reset links, and keys are hidden, and an email with instructions planted for the agent is defused.
+
+**Is it working?** With protection on, open [Test my protection](https://williamchen-pm.github.io/hide-and-sneak/selftest.html). It's a page of fake sensitive information that reports what was hidden, locked, or masked with your current settings. It's also in the popup.
 
 ## Feedback
 
@@ -160,7 +166,7 @@ You can switch between Agent Mode and Presenting mode while protection is on. Ch
 
 - **Unit tests:** `npm test` (Node 18+)
 - **End-to-end tests:** see [`docs/INSTALL.md`](docs/INSTALL.md)
-- **Design, scope, and decisions:** [`docs/DESIGN.md`](docs/DESIGN.md) · **Spec and threat model:** [`docs/SPEC.md`](docs/SPEC.md) · **Coverage audit:** [`docs/AUDIT.md`](docs/AUDIT.md) · **Test log:** [`docs/SPIKE.md`](docs/SPIKE.md)
+- **Design, scope, and decisions:** [`docs/DESIGN.md`](docs/DESIGN.md) · **Spec and threat model:** [`docs/SPEC.md`](docs/SPEC.md) · **Coverage:** [`docs/COVERAGE.md`](docs/COVERAGE.md) (demos, `node tests/coverage.js`), [`docs/AUDIT.md`](docs/AUDIT.md) (pattern samples) · **Real-site check:** `node tests/sites.js` writes `docs/SITES.md` · **Test log:** [`docs/SPIKE.md`](docs/SPIKE.md)
 
 ## License
 

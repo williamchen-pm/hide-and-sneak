@@ -265,5 +265,5 @@ async function init() {
 chrome.runtime.onStartup.addListener(init);
 chrome.runtime.onInstalled.addListener(async (details) => {
   await init();
-  if (details.reason === 'install') chrome.runtime.openOptionsPage();
+  if (details.reason === 'install') chrome.tabs.create({ url: chrome.runtime.getURL('welcome/welcome.html') });
 });

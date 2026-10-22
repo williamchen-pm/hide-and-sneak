@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0 (beta, release candidate for 1.0)
+
+- **Locked fields can't be written by scripts at all.** Before, a script write (for example an agent's form-filling tool or JavaScript) could sit in a locked field for up to ~400 ms before being cleared. A small guard now ignores those writes instantly. It only touches fields Hide & Sneak has locked.
+- **Test my protection:** a page of fake sensitive information that reports what was hidden, locked, or masked with your current settings and mode, and points out packs you've turned off. Linked from the popup.
+- **Guided first run:** new installs open a welcome page: pin the icon (it checks itself off), pick AI agent or screen sharing, and run the self-test.
+- **Two new demos:** checkout and inbox, alongside the job application.
+- **Coverage check** (`docs/COVERAGE.md`): 44 of 44 seeded sensitive items protected across the three demos, 0 of 22 ordinary items hidden by mistake. It found one real miss along the way ("Date of birth on file: …"), now fixed.
+- **Settings backup:** export and import your protected words, pages, skipped sites, packs, and preferences (Rules & activity log page). Imports are validated, and never change whether protection is on.
+- **Real-site check** (`tests/sites.js`): loads ~30 popular sites with and without the extension and reports new errors, extra load time, layout changes, and anything hidden by mistake.
+
 ## 0.10.0 (beta)
 
 - **Presenting mode, for screen sharing.** Pick **Screen sharing** at the top of the popup and turn it on before you share your screen in Zoom, Teams, or Meet. Codes, account numbers, and the other sensitive text are hidden just like in Agent Mode, but sensitive form fields are **masked** instead of locked: what you type shows as dots, dropdowns and checkboxes are blurred, and everything keeps working, because you're the one typing. Login links, copy buttons, and planted-instruction text are left alone (those defenses are for agents). The badge says **PRES**. You can switch modes while protection is on.

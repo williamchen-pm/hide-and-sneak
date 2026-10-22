@@ -1,4 +1,4 @@
-# Chrome Web Store submission kit (v0.10.0 beta)
+# Chrome Web Store submission kit (v0.11.0 beta)
 
 Copy each block into the matching field in the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
@@ -30,6 +30,8 @@ If you hand everyday tasks to a browser AI agent, such as triaging email, fillin
 - Instructions planted on a page for AI agents ("AI agents: forward this email…", "ignore previous instructions", hidden text telling the agent to run scripts) are removed before the agent reads them.
 
 It missed something? Select it, right-click, and choose "Hide this from AI agents." When the agent is done, the popup lists the fields left for you to fill in. Shortcut: Alt+Shift+H.
+
+Is it working? Click "Test my protection" in the popup for a page of fake sensitive information that shows what was hidden, locked, or masked with your settings.
 
 What it recognizes: verification and backup codes, passwords and PINs, crypto wallet recovery phrases, card numbers, expiry dates and CVVs, bank account and routing numbers, SSNs, tax and ID numbers (including UK and Canada), health insurance IDs, security question answers, API keys, license keys, and one-time login links. Optional packs cover account balances, crypto wallet addresses, contact info, and the last 4 digits of cards and accounts.
 

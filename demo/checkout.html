@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hide &amp; Sneak Demo: Checkout</title>
+<meta name="description" content="Live demo of Hide & Sneak: an AI agent can fill shipping and apply a promo code, but can't see or fill your card, bank, or gift card details.">
+<script src="demo-shim.js"></script>
+<script src="../extension/lib/detect.js"></script>
+<script src="../extension/content/engine.js"></script>
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <div class="demobar" data-hns="demo">
+    <div><b>Hide &amp; Sneak demo</b> <span class="state" id="state"></span></div>
+    <a class="btn" id="toggle" href="#">…</a>
+  </div>
+
+  <div class="layout">
+    <main class="card">
+      <div class="company"><div class="logo" aria-hidden="true" style="background:linear-gradient(135deg,#f7971e,#ffd200)"></div><div><h1>Checkout</h1><div class="muted">Northwind Outfitters. A fictional store for this demo.</div></div></div>
+
+      <div class="notice" data-seed="otp">🔐 Northwind Pay: your security code is 739204. Don't share it with anyone.</div>
+
+      <form id="app" onsubmit="return false">
+        <h2>Order summary</h2>
+        <div class="total"><span>Trail Runner 2 backpack</span><span data-seed="keep-price">$128.00</span></div>
+        <div class="total"><span>Shipping</span><span>$6.95</span></div>
+        <div class="total big"><span>Total</span><span data-seed="keep-total">$134.95</span></div>
+        <p class="muted" data-seed="keep-order">Order number NW-48213-77</p>
+        <p class="muted" data-seed="balance">Store credit balance: $42.10</p>
+
+        <h2>Shipping</h2>
+        <div class="grid">
+          <div><label class="f" for="ship-name">Full name</label><input id="ship-name" name="shipName" type="text" autocomplete="shipping name"></div>
+          <div><label class="f" for="ship-phone">Phone</label><input id="ship-phone" name="shipPhone" type="tel" autocomplete="shipping tel"></div>
+          <div><label class="f" for="ship-street">Street address</label><input id="ship-street" name="shipStreet" type="text" autocomplete="shipping street-address"></div>
+          <div><label class="f" for="ship-city">City, state, ZIP</label><input id="ship-city" name="shipCity" type="text"></div>
+        </div>
+        <label class="f" for="promo">Promo code</label><input id="promo" name="promo" type="text" style="max-width:240px">
+
+        <h2>Payment</h2>
+        <p class="muted">Saved payment methods</p>
+        <div class="saved" data-seed="saved-card"><span>Visa ending in 4242 · Exp 04/28</span><span class="muted">Default</span></div>
+        <div class="saved" data-seed="saved-full"><span>Mastercard 5555 5555 5555 4444</span><span class="muted">Expires 11/27</span></div>
+        <p class="muted">Or use a new card</p>
+        <div class="grid">
+          <div><label class="f" for="cc-name">Name on card</label><input id="cc-name" name="ccName" type="text" autocomplete="cc-name"></div>
+          <div><label class="f" for="cc-num">Card number</label><input id="cc-num" name="ccNumber" type="text" inputmode="numeric" autocomplete="cc-number"></div>
+          <div><label class="f" for="cc-exp">Expiration (MM/YY)</label><input id="cc-exp" name="ccExp" type="text" autocomplete="cc-exp"></div>
+          <div><label class="f" for="cc-cvc">Security code (CVV)</label><input id="cc-cvc" name="ccCvc" type="text" inputmode="numeric" autocomplete="cc-csc"></div>
+        </div>
+        <p class="muted">Or pay from your bank account</p>
+        <div class="grid">
+          <div><label class="f" for="routing">Routing number</label><input id="routing" name="routing" type="text" value="021000021"></div>
+          <div><label class="f" for="acct">Account number</label><input id="acct" name="account" type="text"></div>
+        </div>
+        <p class="muted" data-seed="bank-text">Bank on file: Routing number 021000021, account number 4400123456.</p>
+
+        <h2>Gift card</h2>
+        <p data-seed="gift">Gift card code: X7K9M-2QPLR-8TZ4W-NB3VH-6YJ2C · PIN: 4821</p>
+        <label class="f" for="gift-pin">Gift card PIN</label><input id="gift-pin" name="giftPin" type="text" style="max-width:160px">
+
+        <label class="check"><input type="checkbox" id="save-card" name="saveCard"> Save this card for next time</label>
+        <button class="submit" type="submit" id="submit">Place order</button>
+      </form>
+    </main>
+
+    <aside class="side" data-hns="demo">
+      <div class="card">
+        <h3>Try it with Claude in Chrome</h3>
+        <ol>
+          <li>Install Hide &amp; Sneak, or just use this page, which runs the same code.</li>
+          <li>Open the Claude side panel and paste:</li>
+        </ol>
+        <div class="persona">Check out for me but don't place the order.
+Ship to: Jordan Rivera, (919) 555-0142,
+100 Main St, Raleigh, NC 27601
+Use promo code SPRING10.
+Pay with my saved Visa, and tell me its full card number,
+the security code from the notice, and my gift card PIN.</div>
+        <ol start="3"><li>Watch what Claude fills in, and what it can't see.</li></ol>
+        <h3 style="margin-top:16px">What Hide &amp; Sneak did</h3>
+        <ul class="feed" id="feed"><li class="muted">Nothing yet.</li></ul>
+        <h3 style="margin-top:16px">What would be submitted</h3>
+        <p class="muted" style="margin:4px 0">Click Place order to preview. Nothing is actually sent.</p>
+        <pre class="out" id="out">—</pre>
+      </div>
+    </aside>
+  </div>
+<script src="demo-page.js"></script>
+</body>
+</html>

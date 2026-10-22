@@ -70,7 +70,7 @@
     { id: 'ssn-keyword', pack: 'identity', token: '[SSN]', group: 1,
       re: /(?:\bSSN\b|social\s+security(?:\s+(?:number|no\.?|#))?|\bTIN\b|\bITIN\b)[\s:#.\-]{0,12}((?!000|666|9\d\d)\d{3}-?\d{2}-?\d{4})(?!\d)/dgi },
     { id: 'dob-keyword', pack: 'identity', token: '[DATE OF BIRTH]', group: 1,
-      re: /(?:date\s+of\s+birth|\bDOB\b|\bborn(?:\s+on)?\b|birth\s*date|birthday)[\s:.\-]{0,12}((?:\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})|(?:\d{4}-\d{2}-\d{2})|(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4}))/dgi },
+      re: /(?:date\s+of\s+birth|\bDOB\b|\bborn(?:\s+on)?\b|birth\s*date|birthday)(?:\s+(?:on\s+file|on\s+record|we\s+have|listed|entered|provided|is|was)){0,2}[\s:.\-]{0,12}((?:\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})|(?:\d{4}-\d{2}-\d{2})|(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4}))/dgi },
     { id: 'ein-keyword', pack: 'identity', token: '[TAX ID]', group: 1,
       re: /(?:\bEIN\b|\bFEIN\b|employer\s+identification(?:\s+(?:number|no\.?))?|federal\s+tax\s+id(?:entification)?(?:\s+(?:number|no\.?))?|\btax\s+id(?:\s+(?:number|no\.?))?)[\s:#.\-]{0,12}(\d{2}-?\d{7})(?!\d)/dgi },
     { id: 'uk-nino', pack: 'identity', token: '[ID NUMBER]', group: 1,
