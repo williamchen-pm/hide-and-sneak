@@ -8,27 +8,32 @@ importScripts('lib/settings.js');
 
 const SCRIPT_ID = 'hns-engine';
 const CONTENT_JS = ['lib/detect.js', 'content/engine.js'];
+// The write guard runs in the page's own world so it can intercept script writes to locked fields.
+const GUARD_ID = 'hns-guard';
+const GUARD_JS = ['content/guard.js'];
 const LOG_CAP = 5000;
 const tabCounts = new Map();   // tabId -> { protected, misses }
 const pdfTabs = new Set();     // tabs showing a PDF while Agent Mode is on
 
 async function syncRegistration(on) {
-  const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [SCRIPT_ID] });
-  if (on && !existing.length) {
-    await chrome.scripting.registerContentScripts([{
-      id: SCRIPT_ID, matches: ['<all_urls>'], js: CONTENT_JS,
-      runAt: 'document_start', allFrames: true, matchOriginAsFallback: true, persistAcrossSessions: true,
-    }]);
-  } else if (!on && existing.length) {
-    await chrome.scripting.unregisterContentScripts({ ids: [SCRIPT_ID] });
+  const existing = (await chrome.scripting.getRegisteredContentScripts({ ids: [SCRIPT_ID, GUARD_ID] })).map(s => s.id);
+  const common = { matches: ['<all_urls>'], runAt: 'document_start', allFrames: true, matchOriginAsFallback: true, persistAcrossSessions: true };
+  if (on) {
+    const add = [];
+    if (!existing.includes(GUARD_ID)) add.push({ id: GUARD_ID, js: GUARD_JS, world: 'MAIN', ...common });
+    if (!existing.includes(SCRIPT_ID)) add.push({ id: SCRIPT_ID, js: CONTENT_JS, ...common });
+    if (add.length) await chrome.scripting.registerContentScripts(add);
+  } else if (existing.length) {
+    await chrome.scripting.unregisterContentScripts({ ids: existing });
   }
 }
 
 async function injectIntoOpenTabs() {
   const tabs = await chrome.tabs.query({});
-  await Promise.all(tabs.filter(t => /^https?:/.test(t.url || '')).map(t =>
-    chrome.scripting.executeScript({ target: { tabId: t.id, allFrames: true }, files: CONTENT_JS }).catch(() => {})
-  ));
+  await Promise.all(tabs.filter(t => /^https?:/.test(t.url || '')).map(async t => {
+    await chrome.scripting.executeScript({ target: { tabId: t.id, allFrames: true }, files: GUARD_JS, world: 'MAIN' }).catch(() => {});
+    await chrome.scripting.executeScript({ target: { tabId: t.id, allFrames: true }, files: CONTENT_JS }).catch(() => {});
+  }));
 }
 
 async function setBadge(tabId) {

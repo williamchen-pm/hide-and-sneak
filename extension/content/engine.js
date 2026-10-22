@@ -532,6 +532,8 @@
     if (clearField(el)) log({ effect: 'field-cleared', pack: info.pack, field: info.label });
     if (kind === 'readonly') el.readOnly = true; else el.disabled = true;
     el.setAttribute('tabindex', '-1');
+    // Tells the write guard (content/guard.js, page world) to ignore script writes to this field.
+    if (!info.isButton) el.setAttribute('data-hns-locked', '');
     el.setAttribute('aria-label', info.ariaText || ('Protected by Hide & Sneak (' + info.label + '). Ask the user to fill this in.'));
     state.cover = coverTarget(el);
     state.human = info.isButton ? null : humanLabel(el, state, info);
@@ -542,6 +544,9 @@
     // Clear immediately on any write event, not just on the 400 ms sweep.
     state.onWrite = () => { if (active && clearField(el)) log({ effect: 'lock-bypass-cleared', pack: info.pack, field: info.label }); };
     ['input', 'change', 'paste', 'drop'].forEach(t => el.addEventListener(t, state.onWrite, true));
+    // Logged at most once per field every 2 s, so an agent retrying in a loop can't flood the log.
+    state.onBlocked = () => { const now = Date.now(); if (active && now - (state.lastBlocked || 0) > 2000) { state.lastBlocked = now; log({ effect: 'lock-write-blocked', pack: info.pack, field: info.label }); } };
+    el.addEventListener('hns-blocked-write', state.onBlocked);
     locked.set(el, state);
     totalProtected++;
     log({ effect: 'field-locked', pack: info.pack, field: info.label, reason: info.reason });
@@ -760,6 +765,8 @@
       if (st.prev.ariaLabel == null) el.removeAttribute('aria-label'); else el.setAttribute('aria-label', st.prev.ariaLabel);
       st.marker.remove();
       ['input', 'change', 'paste', 'drop'].forEach(t => el.removeEventListener(t, st.onWrite, true));
+      el.removeAttribute('data-hns-locked');
+      if (st.onBlocked) el.removeEventListener('hns-blocked-write', st.onBlocked);
     }
     locked.clear();
     groupMarkers.clear();
